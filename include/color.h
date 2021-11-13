@@ -59,4 +59,9 @@ void cv_write_color(cv::Mat& image_, int i, int j, const color& pixel_color, int
         static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999)),
         static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999)) };
 }
+
+inline double Gray(color c)
+{
+    return (c[0] + c[1] + c[2]) / 3;
+}
 #endif

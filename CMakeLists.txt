@@ -5,7 +5,22 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("PBRT-Learning")
 
-FILE(GLOB SC_FILES "*.cpp" "*.h")
+include_directories(include)
 
-# 将源代码添加到此项目的可执行文件。
+# set the directory of executable files
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${opencv_test_SOURCE_DIR}/bin)
+
+# find required opencv
+find_package(OpenCV REQUIRED)
+# directory of opencv headers
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+FILE(GLOB SC_FILES "*.cpp" "include/*.h")
+
+# name of executable file and path of source file
 add_executable(${PROJECT_NAME} ${SC_FILES})
+
+# directory of opencv library
+link_directories(${OpenCV_LIBRARY_DIRS})
+# opencv libraries
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
