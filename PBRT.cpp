@@ -16,6 +16,7 @@
 #include <time.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 
 color ray_color(const ray& r, const color& background, const hittable& world,  shared_ptr<hittable>& lights, int depth) {
     hit_record rec;
@@ -398,6 +399,21 @@ int main() {
     clock_t end = clock();
 
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq.png", image_);
+    //去噪
+    cv::Mat result1, result2, result3, result4;
+    blur(image_, result1, cv::Size(5, 5));
+    cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_1.png", result1);
+
+    GaussianBlur(image_, result2, cv::Size(5, 5), 0);
+    cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_2.png", result2);
+
+    medianBlur(image_, result3, 5);
+    cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_3.png", result3);
+
+    fastNlMeansDenoisingColored(image_, result4, 15, 15, 10, 30);
+    cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_4.png", result4);
+
+
     std::cerr << "\nSpend time:" << (end - start) / 1000 << "s. Done.\n";
     
 }

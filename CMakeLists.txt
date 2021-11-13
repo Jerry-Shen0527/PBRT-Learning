@@ -8,7 +8,7 @@ project ("PBRT-Learning")
 include_directories(include)
 
 # set the directory of executable files
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${opencv_test_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PBRT-Learning_SOURCE_DIR}/bin)
 
 # find required opencv
 find_package(OpenCV REQUIRED)
