@@ -41,7 +41,10 @@ color ray_color(const ray& r, const color& background, const hittable& world,  s
 
     ray scattered = ray(rec.p, p.generate(), r.time());
     auto pdf_val = p.value(scattered.direction());
-
+    if (pdf_val == 0)
+        std::cout << emitted
+        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val << std::endl;
     return emitted
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
         * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
@@ -317,7 +320,7 @@ int main() {
 
     case 4:
         world = earth();
-        samples_per_pixel = 400;
+        samples_per_pixel = 100;
         background = color(0, 0, 0);
         lookfrom = point3(26, 3, 6);
         lookat = point3(0, 2, 0);
@@ -328,7 +331,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 200;
+        samples_per_pixel = 1000;
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -401,16 +404,16 @@ int main() {
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq.png", image_);
     //去噪
     cv::Mat result1, result2, result3, result4;
-    blur(image_, result1, cv::Size(5, 5));
+    blur(image_, result1, cv::Size(3, 3));
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_1.png", result1);
 
-    GaussianBlur(image_, result2, cv::Size(5, 5), 0);
+    GaussianBlur(image_, result2, cv::Size(3, 3), 0);
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_2.png", result2);
 
-    medianBlur(image_, result3, 5);
+    medianBlur(image_, result3, 3);
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_3.png", result3);
 
-    fastNlMeansDenoisingColored(image_, result4, 15, 15, 10, 30);
+    fastNlMeansDenoisingColored(image_, result4);
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_4.png", result4);
 
 
