@@ -15,7 +15,7 @@ A group of GCLers re-implementing PBRT for code practice.
 
  - perlin noise
 
- - [stb_image](https://github.com/nothings/stb) `data = stbi_load() successfully, but value()::data=nullptr.`
+ - **[stb_image](https://github.com/nothings/stb)**  `data = stbi_load() successfully, but value()::data=nullptr.`
 
  - rotate_y : public hittable:: `rec.set_face_normal(rotated_r, normal); ` is error? and normal-->rec.normal
 
@@ -31,4 +31,8 @@ A group of GCLers re-implementing PBRT for code practice.
 - RayTracing in1weekend
 
 <img src=scene/raytracing_in1weekend/Final-Scene.png width="50%" height="50%">
+
+- RayTracing in the next week
+
+  <img src=scene/RayTracing_next_week/Final_Scene.png width="50%" height="50%">
 
