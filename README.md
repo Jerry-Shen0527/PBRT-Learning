@@ -3,13 +3,23 @@ A group of GCLers re-implementing PBRT for code practice.
 
 ## Question
 
-- what is **Shadow Acne**
+- ~~what is **Shadow Acne**~~
 
 - in focus distance (ch12),  what the reason that:
 
   vertical = focus_dist * viewport_height * v;
 
   lower_left_corner = origin - horizontal/2 - vertical/2 - focus_dist*w;
+  
+ - checker_texture::auto sines = sin(10 * p.x()) * sin(10 * p.y()) * sin(10 * p.z());
+
+ - perlin noise
+
+ - [stb_image](https://github.com/nothings/stb) `data = stbi_load() successfully, but value()::data=nullptr.`
+
+ - rotate_y : public hittable:: `rec.set_face_normal(rotated_r, normal); ` is error? and normal-->rec.normal
+
+ - volume: `hit_distance`
 
 ## Notes
 
@@ -20,5 +30,5 @@ A group of GCLers re-implementing PBRT for code practice.
 
 - RayTracing in1weekend
 
-<img src=scene/Final-Scene.png width="50%" height="50%">
+<img src=scene/raytracing_in1weekend/Final-Scene.png width="50%" height="50%">
 
