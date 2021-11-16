@@ -32,7 +32,12 @@ A group of GCLers re-implementing PBRT for code practice.
 
 <img src=scene/raytracing_in1weekend/Final-Scene.png width="50%" height="50%">
 
+
+
 - RayTracing in the next week
 
   <img src=scene/RayTracing_next_week/Final_Scene.png width="50%" height="50%">
+  
+  
 
+- RayTracin TheRestOfYourLife
