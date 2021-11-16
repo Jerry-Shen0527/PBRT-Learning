@@ -3,6 +3,7 @@
 
 #include "hittable.h"
 #include "vec3.h"
+#include "pdf.h"
 
 class sphere : public hittable {
 public:
@@ -13,6 +14,8 @@ public:
     virtual bool hit(
         const ray& r, double t_min, double t_max, hit_record& rec) const override;
     virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
+    virtual double pdf_value(const point3& o, const vec3& v) const override;
+    virtual vec3 random(const point3& o) const override;
 
 private:
     static void get_sphere_uv(const point3& p, double& u, double& v);
