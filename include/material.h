@@ -7,14 +7,22 @@
 #include "hittable.h"
 #include "texture.h"
 #include "onb.h"
+#include "pdf.h"
 
 struct hit_record;
+
+struct scatter_record {
+    ray specular_ray;
+    bool is_specular;
+    color attenuation;
+    shared_ptr<pdf> pdf_ptr;
+};
 
 class material {
 public:
 
     virtual bool scatter(
-        const ray& r_in, const hit_record& rec, color& albedo, ray& scattered, double& pdf
+        const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const {
         return false;
     }
@@ -25,7 +33,9 @@ public:
         return 0;
     }
 
-    virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v, const point3& p) const {
+    virtual color emitted(
+        const ray& r_in, const hit_record& rec, double u, double v, const point3& p
+    ) const {
         return color(0, 0, 0);
     }
 
@@ -38,19 +48,11 @@ public:
     lambertian(shared_ptr<texture> a) : albedo(a) {}
 
     virtual bool scatter(
-        const ray& r_in, const hit_record& rec, color& alb, ray& scattered, double& pdf
+        const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const override {
-        onb uvw;
-        uvw.build_from_w(rec.normal);
-        auto direction = uvw.local(random_cosine_direction());
-
-        // Catch degenerate scatter direction
-        if (direction.near_zero())
-            direction = rec.normal;
-
-        scattered = ray(rec.p, unit_vector(direction), r_in.time());
-        alb = albedo->value(rec.u, rec.v, rec.p);
-        pdf = dot(uvw.w(), scattered.direction()) / pi;
+        srec.is_specular = false;
+        srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+        srec.pdf_ptr = make_shared<cosine_pdf>(rec.normal); //sample dir and pdf
         return true;
     }
 
