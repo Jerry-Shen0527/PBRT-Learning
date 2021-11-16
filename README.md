@@ -41,3 +41,5 @@ A group of GCLers re-implementing PBRT for code practice.
   
 
 - RayTracin TheRestOfYourLife
+
+  <img src=scene/raytracing_the_rest/Final_Scene.png width="50%" height="50%">
