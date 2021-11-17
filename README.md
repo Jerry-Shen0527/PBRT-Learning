@@ -30,7 +30,7 @@ A group of GCLers re-implementing PBRT for code practice.
 
 - RayTracing in1weekend
 
-<img src=scene/raytracing_in1weekend/Final-Scene.png width="50%" height="50%">
+  <img src=scene/raytracing_in1weekend/Final-Scene.png width="50%" height="50%">
 
 
 
