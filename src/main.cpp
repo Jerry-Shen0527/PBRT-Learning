@@ -14,6 +14,8 @@
 #include "box.h"
 #include "constant_medium.h"
 #include "pdf.h"
+#include "my_image.h"
+
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -379,6 +381,8 @@ int main() {
     camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
+    auto earth_texture = make_shared<my_image>("../PBRT-Learning/data/earthmap.jpg");
+    std::cout << earth_texture->get_width() << " " << earth_texture->get_height() << " " << earth_texture->get_bytes_per_scanline() << std::endl;
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     

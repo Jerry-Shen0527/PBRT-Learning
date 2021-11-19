@@ -4,7 +4,6 @@
 #include "rtweekend.h"
 #include "color.h"
 
-//#include "rtw_stb_image.h"
 
 #include "perlin.h"
 

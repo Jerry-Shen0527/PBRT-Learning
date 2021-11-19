@@ -1,9 +1,10 @@
-#include "texture.h"
-#define STB_IMAGE_IMPLEMENTATION
+#include "my_image.h"
+//#include "rtw_stb_image.h"
+#include <iostream>
 #include "../external/stb_image.h"
 
-
-image_texture::image_texture(const char* filename) {
+my_image::my_image(const char* filename)
+{
     auto components_per_pixel = bytes_per_pixel;
 
     data = stbi_load(
