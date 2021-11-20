@@ -5,6 +5,11 @@
 #include "bvh.h"
 
 #include<iostream>
+#include<thread>
+#include<vector>
+#include<ctime>
+#include "omp.h"
+using namespace std;
 
 //#include "rtweekend.h"
 #include "camera.h"
@@ -335,7 +340,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 1000;//200
+        samples_per_pixel = 200;//200
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -381,25 +386,60 @@ int main() {
     camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
     // Render
-    auto earth_texture = make_shared<my_image>("../PBRT-Learning/data/earthmap.jpg");
-    std::cout << earth_texture->get_width() << " " << earth_texture->get_height() << " " << earth_texture->get_bytes_per_scanline() << std::endl;
+    //auto earth_texture = make_shared<my_image>("../PBRT-Learning/data/earthmap.jpg");
+    //std::cout << earth_texture->get_width() << " " << earth_texture->get_height() << " " << earth_texture->get_bytes_per_scanline() << std::endl;
+    
+    const size_t core_num = std::thread::hardware_concurrency();
+    size_t use_num = core_num;
+    vector<thread> workers;
+    workers.resize(use_num);
+    
+    thread ww;
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     
+    size_t part_samples = samples_per_pixel / use_num;
+
+    auto work = [=](int i, int j, size_t ps, color& pixel_color) {
+
+        for (size_t s = 0; s < ps; ++s) {
+            auto u = (i + random_double()) / (image_width - 1);
+            auto v = (j + random_double()) / (image_height - 1);
+            ray r = cam.get_ray(u, v);
+            pixel_color += ray_color(r, background, world, lights, max_depth);
+        }
+    };
+
+    clock_t start, end;
+    start = clock();
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            //color pixel_color(double(i) / (image_width - 1), double(j) / (image_height - 1), 0.25);
+            /*
             color pixel_color(0, 0, 0);
+            
+            for (size_t idt = 0; idt < use_num; idt++)
+                workers[idt] = thread(work, i, j, part_samples, std::ref(pixel_color));
+            for (auto& worker : workers)
+                worker.join();
+            */
+
+            
+            color pixel_color(0, 0, 0);
+#pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
                 auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, background, world, lights, max_depth);
             }
+            /**/
+
             write_color(std::cout, pixel_color, samples_per_pixel);
         }
     }
+    end = clock();
+    double run_time = (double)(end - start) / CLOCKS_PER_SEC;
 
-    std::cerr << "\nDone.\n";
+    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";
 }
