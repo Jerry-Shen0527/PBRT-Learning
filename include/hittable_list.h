@@ -18,19 +18,19 @@ public:
 
     void clear() { objects.clear(); }
     void add(shared_ptr<hittable> object) { objects.push_back(object); }
-    void setTime(double t0, double t1) { _time0 = t0; _time1 = t1; };
+    void setTime(Float t0, Float t1) { _time0 = t0; _time1 = t1; };
 
     virtual bool hit(
-        const ray& r, double t_min, double t_max, hit_record& rec) const override;
+        const ray& r, Float t_min, Float t_max, hit_record& rec) const override;
 
     virtual bool bounding_box(
-        double time0, double time1, aabb& output_box) const override;
+        Float time0, Float time1, aabb& output_box) const override;
 public:
     std::vector<shared_ptr<hittable>> objects;
-    double _time0, _time1;
+    Float _time0, _time1;
 };
 
-bool hittable_list::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+bool hittable_list::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     hit_record temp_rec;
     bool hit_anything = false;
     auto closest_so_far = t_max;
@@ -46,7 +46,7 @@ bool hittable_list::hit(const ray& r, double t_min, double t_max, hit_record& re
 }
 
 //list中所有元素的bounding box，若有元素无bounding box 返回false
-bool hittable_list::bounding_box(double time0, double time1, aabb& output_box) const {
+bool hittable_list::bounding_box(Float time0, Float time1, aabb& output_box) const {
     if (objects.empty()) return false;
 
     aabb temp_box;
@@ -69,18 +69,18 @@ class bvh_node : public hittable {
 public:
     bvh_node();
 
-    bvh_node(const hittable_list& list, double time0, double time1)
+    bvh_node(const hittable_list& list, Float time0, Float time1)
         : bvh_node(list.objects, 0, list.objects.size(), time0, time1)
     {}
 
     bvh_node(
         const std::vector<shared_ptr<hittable>>& src_objects,
-        size_t start, size_t end, double time0, double time1);
+        size_t start, size_t end, Float time0, Float time1);
 
     virtual bool hit(
-        const ray& r, double t_min, double t_max, hit_record& rec) const override;
+        const ray& r, Float t_min, Float t_max, hit_record& rec) const override;
 
-    virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
+    virtual bool bounding_box(Float time0, Float time1, aabb& output_box) const override;
 
 public:
     shared_ptr<hittable> left;
@@ -114,7 +114,7 @@ bool box_z_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
 
 bvh_node::bvh_node(
     const std::vector<shared_ptr<hittable>>& src_objects,
-    size_t start, size_t end, double time0, double time1
+    size_t start, size_t end, Float time0, Float time1
 ) {
     auto objects = src_objects; // Create a modifiable array of the source scene objects
 
@@ -156,12 +156,12 @@ bvh_node::bvh_node(
     box = surrounding_box(box_left, box_right);
 }
 
-bool bvh_node::bounding_box(double time0, double time1, aabb& output_box) const {
+bool bvh_node::bounding_box(Float time0, Float time1, aabb& output_box) const {
     output_box = box;
     return true;
 }
 
-bool bvh_node::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+bool bvh_node::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     if (!box.hit(r, t_min, t_max))
         return false;
 

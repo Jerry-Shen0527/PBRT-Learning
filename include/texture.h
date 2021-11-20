@@ -8,7 +8,7 @@
 
 class texture {
 public:
-    virtual color value(double u, double v, const point3& p) const = 0;
+    virtual color value(Float u, Float v, const point3& p) const = 0;
 };
 
 class solid_color : public texture {
@@ -16,10 +16,10 @@ public:
     solid_color() {}
     solid_color(color c) : color_value(c) {}
 
-    solid_color(double red, double green, double blue)
+    solid_color(Float red, Float green, Float blue)
         : solid_color(color(red, green, blue)) {}
 
-    virtual color value(double u, double v, const vec3& p) const override {
+    virtual color value(Float u, Float v, const vec3& p) const override {
         return color_value;
     }
 
@@ -37,7 +37,7 @@ class checker_texture : public texture {
         checker_texture(color c1, color c2)
             : even(make_shared<solid_color>(c1)) , odd(make_shared<solid_color>(c2)) {}
 
-        virtual color value(double u, double v, const point3& p) const override {
+        virtual color value(Float u, Float v, const point3& p) const override {
             auto sines = sin(10*p.x())*sin(10*p.y())*sin(10*p.z());
             //auto sines = sin(100 * u) * sin(100 * v);
             if (sines < 0)
@@ -72,7 +72,7 @@ public:
         delete[] perm_z;
     }
 
-    double noise(const point3& p) const {
+    Float noise(const point3& p) const {
         auto u = p.x() - floor(p.x());
         auto v = p.y() - floor(p.y());
         auto w = p.z() - floor(p.z());
@@ -93,7 +93,7 @@ public:
         return perlin_interp(c, u, v, w);
     }
 
-    double turb(const point3& p, int depth = 7) const {
+    Float turb(const point3& p, int depth = 7) const {
         auto accum = 0.0;
         auto temp_p = p;
         auto weight = 1.0;
@@ -109,7 +109,7 @@ public:
 
 private:
     static const int point_count = 256;
-    double* ranfloat;
+    Float* ranFloat;
     int* perm_x;
     int* perm_y;
     int* perm_z;
@@ -135,7 +135,7 @@ private:
         }
     }
 
-    static double trilinear_interp(double c[2][2][2], double u, double v, double w) {
+    static Float trilinear_interp(Float c[2][2][2], Float u, Float v, Float w) {
         auto accum = 0.0;
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < 2; j++)
@@ -147,7 +147,7 @@ private:
         return accum;
     }
 
-    static double perlin_interp(vec3 c[2][2][2], double u, double v, double w) {
+    static Float perlin_interp(vec3 c[2][2][2], Float u, Float v, Float w) {
         auto uu = u * u * (3 - 2 * u);
         auto vv = v * v * (3 - 2 * v);
         auto ww = w * w * (3 - 2 * w);
@@ -170,15 +170,15 @@ private:
 class noise_texture : public texture {
 public:
     noise_texture() {}
-    noise_texture(double sc) : scale(sc) {}
+    noise_texture(Float sc) : scale(sc) {}
 
-    virtual color value(double u, double v, const point3& p) const override {
+    virtual color value(Float u, Float v, const point3& p) const override {
         return color(1, 1, 1) * 0.5 * (1 + sin(scale * p.z() + 10 * noise.turb(p)));
     }
 
 public:
     perlin noise;
-    double scale;
+    Float scale;
 };
 
 class image_texture : public texture {
@@ -210,7 +210,7 @@ public:
     ~image_texture() {
         delete data;
     }
-    virtual color value(double u, double v, const vec3& p) const override {
+    virtual color value(Float u, Float v, const vec3& p) const override {
         // Clamp input texture coordinates to [0,1] x [1,0]
         u = clamp(u, 0.0, 1.0);
         v = 1.0 - clamp(v, 0.0, 1.0);  // Flip V to image coordinates
@@ -228,7 +228,7 @@ public:
                      color_scale * image_mat.at<cv::Vec3b>(j, i)[2]);
     }
 /*
-    virtual color value(double u, double v, const vec3& p) const override {
+    virtual color value(Float u, Float v, const vec3& p) const override {
         // If we have no texture data, then return solid cyan as a debugging aid.
         if (data == nullptr)
             return color(0, 1, 1);

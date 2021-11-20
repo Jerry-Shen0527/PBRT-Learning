@@ -11,6 +11,7 @@
 #include "texture.h"
 #include "aarect.h"
 #include "constant_medium.h"
+#include "spectrum.h"
 
 #include <omp.h>
 #include <time.h>
@@ -41,14 +42,10 @@ color ray_color(const ray& r, const color& background, const hittable& world,  s
 
     ray scattered = ray(rec.p, p.generate(), r.time());
     auto pdf_val = p.value(scattered.direction());
-    if (pdf_val == 0)
-        std::cout << emitted
-        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val << std::endl;
+   
     return emitted
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
         * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
-
 }
 
 hittable_list test()
@@ -74,8 +71,8 @@ hittable_list random_scene() {
     int n = 11;
     for (int a = -n; a < n; a++) {
         for (int b = -n; b < n; b++) {
-            auto choose_mat = random_double();
-            point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
+            auto choose_mat = random_Float();
+            point3 center(a + 0.9 * random_Float(), 0.2, b + 0.9 * random_Float());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
@@ -84,7 +81,7 @@ hittable_list random_scene() {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    auto center2 = center + vec3(0, random_double(0, .5), 0);
+                    auto center2 = center + vec3(0, random_Float(0, .5), 0);
                     world.add(make_shared<moving_sphere>(
                         center, center2, 0.0, 1.0, 0.2, sphere_material));
                     world.setTime(0.0, 1.0);
@@ -92,7 +89,7 @@ hittable_list random_scene() {
                 else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5, 1);
-                    auto fuzz = random_double(0, 0.5);
+                    auto fuzz = random_Float(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 }
@@ -220,7 +217,7 @@ hittable_list final_scene() {
             auto z0 = -1000.0 + j * w;
             auto y0 = 0.0;
             auto x1 = x0 + w;
-            auto y1 = random_double(1, 101);
+            auto y1 = random_Float(1, 101);
             auto z1 = z0 + w;
 
             boxes1.add(make_shared<box>(point3(x0, y0, z0), point3(x1, y1, z1), ground));
@@ -272,8 +269,11 @@ hittable_list final_scene() {
     return objects;
 }
 
+
 int main() {
 
+    //CoefficientSpectrum<15> v(0.0);
+    //std::cout << v << std::endl;
     // Image
 
     auto aspect_ratio = 16.0 / 9.0;
@@ -292,7 +292,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (5) {
+    switch (8) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -390,8 +390,8 @@ int main() {
             color pixel_color(0, 0, 0);
 #pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u = (i + random_double()) / (image_width - 1);
-                auto v = (j + random_double()) / (image_height - 1);
+                auto u = (i + random_Float()) / (image_width - 1);
+                auto v = (j + random_Float()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r,background, world,lights,max_depth);
             }

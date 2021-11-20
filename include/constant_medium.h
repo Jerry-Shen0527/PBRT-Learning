@@ -9,35 +9,35 @@
 
 class constant_medium : public hittable {
 public:
-    constant_medium(shared_ptr<hittable> b, double d, shared_ptr<texture> a)
+    constant_medium(shared_ptr<hittable> b, Float d, shared_ptr<texture> a)
         : boundary(b),
         neg_inv_density(-1 / d),
         phase_function(make_shared<isotropic>(a))
     {}
 
-    constant_medium(shared_ptr<hittable> b, double d, color c)
+    constant_medium(shared_ptr<hittable> b, Float d, color c)
         : boundary(b),
         neg_inv_density(-1 / d),
         phase_function(make_shared<isotropic>(c))
     {}
 
     virtual bool hit(
-        const ray& r, double t_min, double t_max, hit_record& rec) const override;
+        const ray& r, Float t_min, Float t_max, hit_record& rec) const override;
 
-    virtual bool bounding_box(double time0, double time1, aabb& output_box) const override {
+    virtual bool bounding_box(Float time0, Float time1, aabb& output_box) const override {
         return boundary->bounding_box(time0, time1, output_box);
     }
 
 public:
     shared_ptr<hittable> boundary;
     shared_ptr<material> phase_function;
-    double neg_inv_density;
+    Float neg_inv_density;
 };
 
-bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+bool constant_medium::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     // Print occasional samples when debugging. To enable, set enableDebug true.
     const bool enableDebug = false;
-    const bool debugging = enableDebug && random_double() < 0.00001;
+    const bool debugging = enableDebug && random_Float() < 0.00001;
 
     hit_record rec1, rec2;
 
@@ -60,7 +60,7 @@ bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& 
 
     const auto ray_length = r.direction().length();
     const auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-    const auto hit_distance = neg_inv_density * log(random_double());
+    const auto hit_distance = neg_inv_density * log(random_Float());
 
     if (hit_distance > distance_inside_boundary)
         return false;

@@ -7,18 +7,18 @@
 class sphere : public hittable {
 public:
     sphere() {}
-    sphere(point3 cen, double r, shared_ptr<material> m)
+    sphere(point3 cen, Float r, shared_ptr<material> m)
         : center(cen), radius(r), mat_ptr(m) {};
 
     virtual bool hit(
-        const ray& r, double t_min, double t_max, hit_record& rec) const override;
-    virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
+        const ray& r, Float t_min, Float t_max, hit_record& rec) const override;
+    virtual bool bounding_box(Float time0, Float time1, aabb& output_box) const override;
 public:
     point3 center;
-    double radius;
+    Float radius;
     shared_ptr<material> mat_ptr;
 private:
-    static void get_sphere_uv(const point3& p, double& u, double& v) {
+    static void get_sphere_uv(const point3& p, Float& u, Float& v) {
         // p: a given point on the sphere of radius one, centered at the origin.
         // u: returned value [0,1] of angle around the Y axis from X=-1.
         // v: returned value [0,1] of angle from Y=-1 to Y=+1.
@@ -34,7 +34,7 @@ private:
     }
 };
 
-bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+bool sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     vec3 oc = r.origin() - center;
     auto a = r.direction().length_squared();
     auto half_b = dot(oc, r.direction());
@@ -62,7 +62,7 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
     return true;
 }
 
-bool sphere::bounding_box(double time0, double time1, aabb& output_box) const {
+bool sphere::bounding_box(Float time0, Float time1, aabb& output_box) const {
     output_box = aabb(
         center - vec3(radius, radius, radius),
         center + vec3(radius, radius, radius));

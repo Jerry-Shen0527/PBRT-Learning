@@ -11,7 +11,7 @@ public:
     point3 min() const { return minimum; }
     point3 max() const { return maximum; }
 
-    inline bool hit(const ray& r, double t_min, double t_max) const {
+    inline bool hit(const ray& r, Float t_min, Float t_max) const {
         for (int a = 0; a < 3; a++) {
             auto invD = 1.0f / r.direction()[a];
             auto t0 = (min()[a] - r.origin()[a]) * invD;
