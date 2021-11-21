@@ -19,18 +19,18 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 
-color ray_color(const ray& r, const color& background, const hittable& world,  shared_ptr<hittable>& lights, int depth) {
+Color ray_color(const ray& r, const Color& background, const hittable& world,  shared_ptr<hittable>& lights, int depth) {
     hit_record rec;
 
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
-        return color(0, 0, 0);
+        return Color(0.f);
 
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, 0.001, infinity, rec))
         return background;
     scatter_record srec;
-    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+    Color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
     if (!rec.mat_ptr->scatter(r, rec, srec))
         return emitted;
     if (srec.is_specular) {
@@ -116,9 +116,12 @@ hittable_list random_scene() {
 
 hittable_list two_spheres() {
     hittable_list objects;
-
-    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
-
+    color c1 = color(0.2, 0.3, 0.1);
+    color c2 = color(17.0,64.0,148.0) / 255.0;
+    color c3(0.8, 0, 0);
+    auto checker = make_shared<checker_texture>(c3, color(0.9, 0.9, 0.9));
+    //auto checker = make_shared<checker_texture>(color(0.3, 0.1, 0.1), color(0.9, 0.9, 0.9));
+    
     objects.add(make_shared<sphere>(point3(0, -10, 0), 10, make_shared<lambertian>(checker)));
     objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
 
@@ -274,15 +277,12 @@ int main() {
 
     //CoefficientSpectrum<15> v(0.0);
     SampledSpectrum::Init();
-    Float c[3] = { 1.0,0.5,0.5 };
-    SampledSpectrum qaq = SampledSpectrum::FromRGB(c);
-    bool qwa=qaq.IsBlack();
 
     //std::cout << v << std::endl;
     // Image
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
-    int samples_per_pixel =200;
+    int samples_per_pixel =500;
     const int max_depth = 50;
 
     // World
@@ -296,7 +296,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (8) {
+    switch (2) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -365,7 +365,7 @@ int main() {
         world = final_scene();
         aspect_ratio = 1.0;
         image_width = 800;
-        samples_per_pixel = 10000;
+        samples_per_pixel = 160;
         background = color(0, 0, 0);
         lookfrom = point3(478, 278, -600);
         lookat = point3(278, 278, 0);
@@ -388,22 +388,24 @@ int main() {
     cv::Mat image_ = cv::Mat::zeros(image_height, image_width, CV_8UC3);
     clock_t start = clock();
     printf("P3\n%d %d\n255\n", image_width, image_height);
+    Color background_sp = Color::FromRGB(background,SpectrumType::Illuminant);
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            color pixel_color(0, 0, 0);
+            Color pixel_color(0.f);
 #pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
                 auto u = (i + random_Float()) / (image_width - 1);
                 auto v = (j + random_Float()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r,background, world,lights,max_depth);
+                pixel_color += ray_color(r,background_sp, world,lights,max_depth);
             }
             //write_color( pixel_color, samples_per_pixel);
-            cv_write_color(image_, i, image_height - 1 - j, pixel_color, samples_per_pixel);
+            cv_write_color(image_, i, image_height - 1 - j, pixel_color.ToColor(), samples_per_pixel);
         }
     }
     clock_t end = clock();
+    std::cerr << "\nSpend time:" << (end - start) / 1000 << "s. Done.\n";
 
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq.png", image_);
     //去噪
@@ -419,8 +421,5 @@ int main() {
 
     fastNlMeansDenoisingColored(image_, result4);
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_4.png", result4);
-
-
-    std::cerr << "\nSpend time:" << (end - start) / 1000 << "s. Done.\n";
     
 }

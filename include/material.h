@@ -6,24 +6,34 @@
 #include "texture.h"
 #include "onb.h"
 #include "pdf.h"
+#include "spectrum.h"
+
+
+//#define USE_SPECTRUM
+#ifdef USE_SPECTRUM
+using Color = SampledSpectrum;
+#else
+using Color = RGBSpectrum;
+#endif // USE_SPECTRUM
+
 
 struct hit_record;
 
 struct scatter_record {
     ray specular_ray;
     bool is_specular;
-    color attenuation;
+    Color attenuation;
     shared_ptr<pdf> pdf_ptr;
 };
 
 class material {
 public:
-    virtual color emitted(
+    virtual Color emitted(
         const ray& r_in, const hit_record& rec, Float u, Float v, const point3& p) const {
-        return color(0, 0, 0);
+        return Color(0.f);
     }
     virtual bool scatter(
-        const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+        const ray& r_in, const hit_record& rec, Color& attenuation, ray& scattered
     ) const {
         return false;
     }
@@ -50,7 +60,7 @@ public:
         const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const override {
         srec.is_specular = false;
-        srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+        srec.attenuation = Color::FromRGB(albedo->value(rec.u, rec.v, rec.p));
         srec.pdf_ptr = make_shared<cosine_pdf>(rec.normal);
         return true;
     }
@@ -69,7 +79,7 @@ public:
 
 class metal : public material {
 public:
-    metal(const color& a, Float f) : albedo(a), fuzz(f < 1 ? f : 1) {}
+    metal(const color& a, Float f) : albedo(Color::FromRGB(a)), fuzz(f < 1 ? f : 1) {}
 
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record& srec
@@ -83,7 +93,7 @@ public:
     }
 
 public:
-    color albedo;
+    Color albedo;
     Float fuzz;
 };
 
@@ -96,7 +106,7 @@ public:
     ) const override {
         srec.is_specular = true;
         srec.pdf_ptr = nullptr;
-        srec.attenuation = color(1.0, 1.0, 1.0);
+        srec.attenuation = Color(1.0);
         Float refraction_ratio = rec.front_face ? (1.0 / ir) : ir; //从哪侧进入决定折射率
 
         vec3 unit_direction = unit_vector(r_in.direction());
@@ -133,13 +143,13 @@ public:
     diffuse_light(color c) : emit(make_shared<solid_color>(c)) {}
 
     virtual bool scatter(
-        const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+        const ray& r_in, const hit_record& rec, Color& attenuation, ray& scattered
     ) const override {
         return false;
     }
 
-    virtual color emitted(const ray& r_in, const hit_record& rec, Float u, Float v, const point3& p) const override {
-        return emit->value(u, v, p);
+    virtual Color emitted(const ray& r_in, const hit_record& rec, Float u, Float v, const point3& p) const override {
+        return Color::FromRGB(emit->value(u, v, p),SpectrumType::Illuminant);
     }
 
 public:
@@ -152,10 +162,10 @@ public:
     isotropic(shared_ptr<texture> a) : albedo(a) {}
 
     virtual bool scatter(
-        const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+        const ray& r_in, const hit_record& rec, Color& attenuation, ray& scattered
     ) const override {
         scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
-        attenuation = albedo->value(rec.u, rec.v, rec.p);
+        attenuation = Color::FromRGB(albedo->value(rec.u, rec.v, rec.p));
         return true;
     }
 

@@ -30,11 +30,6 @@ inline void XYZToRGB(const Float xyz[3], Float * rgb) {
     rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
     rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
 }
-inline void XYZToRGB(const Float xyz[3], color& rgb) {
-    Float frgb[3];
-    XYZToRGB(xyz, frgb);
-    rgb[0] = frgb[0]; rgb[1] = frgb[1]; rgb[2] = frgb[2];
-}
 
 inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
     xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
@@ -43,6 +38,8 @@ inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
 }
 
 enum class SpectrumType { Reflectance, Illuminant };
+
+
 extern Float InterpolateSpectrumSamples(const Float * lambda, const Float * vals,
     int n, Float l);
 extern void Blackbody(const Float * lambda, int n, Float T, Float * Le);
@@ -316,8 +313,8 @@ public:
         rgb[1] = c[1];
         rgb[2] = c[2];
     }
-    void ToRGB(color& cc) const {
-        cc[0] = c[0]; cc[1] = c[1]; cc[2] = c[2];
+    color ToColor() const {
+        return{ c[0],c[1],c[2] };
     }
 
     const RGBSpectrum& ToRGBSpectrum() const { return *this; }
@@ -475,17 +472,19 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples>{
           ToXYZ(xyz);
           XYZToRGB(xyz, rgb);
       }
-      void ToRGB(color& cc) const {
-          Float xyz[3];
+ 
+      color ToColor() const {
+          Float xyz[3]; Float rgb[3];
           ToXYZ(xyz);
-          XYZToRGB(xyz, cc);
+          XYZToRGB(xyz, rgb);
+          return { rgb[0],rgb[1],rgb[2] };
       }
 
       RGBSpectrum ToRGBSpectrum() const;
       static SampledSpectrum FromRGB(
-          const Float rgb[3], SpectrumType type = SpectrumType::Illuminant);
+          const Float rgb[3], SpectrumType type = SpectrumType::Reflectance);
       static SampledSpectrum FromRGB(
-          const color rgb, SpectrumType type = SpectrumType::Illuminant) {
+          const color rgb, SpectrumType type = SpectrumType::Reflectance) {
           Float frgb[3] = { rgb[0],rgb[1],rgb[2] };
           return FromRGB(frgb, type);
       }

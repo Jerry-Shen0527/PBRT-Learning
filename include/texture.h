@@ -6,6 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+
 class texture {
 public:
     virtual color value(Float u, Float v, const point3& p) const = 0;
@@ -17,7 +18,7 @@ public:
     solid_color(color c) : color_value(c) {}
 
     solid_color(Float red, Float green, Float blue)
-        : solid_color(color(red, green, blue)) {}
+        : solid_color(color(red,green,blue )) {}
 
     virtual color value(Float u, Float v, const vec3& p) const override {
         return color_value;
@@ -173,7 +174,7 @@ public:
     noise_texture(Float sc) : scale(sc) {}
 
     virtual color value(Float u, Float v, const point3& p) const override {
-        return color(1, 1, 1) * 0.5 * (1 + sin(scale * p.z() + 10 * noise.turb(p)));
+        return color(1.0,1.0,1.0) * 0.5 * (1 + sin(scale * p.z() + 10 * noise.turb(p)));
     }
 
 public:
@@ -221,11 +222,12 @@ public:
         // Clamp integer mapping, since actual coordinates should be less than 1.0
         if (i >= width)  i = width - 1;
         if (j >= height) j = height - 1;
-        const auto color_scale = 1.0 / 255.0;
+        const Float color_scale = 1.0 / 255.0;
        // std::cout << image_mat.at<cv::Vec3b>(j, i) << std::endl;
-        return color(color_scale * image_mat.at<cv::Vec3b>(j, i)[0], 
-                     color_scale * image_mat.at<cv::Vec3b>(j, i)[1], 
-                     color_scale * image_mat.at<cv::Vec3b>(j, i)[2]);
+        return color( color_scale * image_mat.at<cv::Vec3b>(j, i)[0],
+                   color_scale * image_mat.at<cv::Vec3b>(j, i)[1],
+                   color_scale * image_mat.at<cv::Vec3b>(j, i)[2] );
+      
     }
 /*
     virtual color value(Float u, Float v, const vec3& p) const override {
