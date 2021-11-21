@@ -57,12 +57,12 @@ Float AverageSpectrumSamples(const Float* lambda, const Float* vals, int n,
 
 
 RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
-    color rgb;
+    Float rgb[3];
     ToRGB(rgb);
     return RGBSpectrum::FromRGB(rgb);
 }
 
-SampledSpectrum SampledSpectrum::FromRGB(const color rgb,
+SampledSpectrum SampledSpectrum::FromRGB(const Float rgb[3],
     SpectrumType type) {
     SampledSpectrum r;
     if (type == SpectrumType::Reflectance) {
@@ -149,7 +149,7 @@ SampledSpectrum SampledSpectrum::FromRGB(const color rgb,
 }
 
 SampledSpectrum::SampledSpectrum(const RGBSpectrum& r, SpectrumType t) {
-    color rgb;
+    Float rgb[3];
     r.ToRGB(rgb);
     *this = SampledSpectrum::FromRGB(rgb, t);
 }

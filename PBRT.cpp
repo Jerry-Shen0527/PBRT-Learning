@@ -273,9 +273,13 @@ hittable_list final_scene() {
 int main() {
 
     //CoefficientSpectrum<15> v(0.0);
+    SampledSpectrum::Init();
+    Float c[3] = { 1.0,0.5,0.5 };
+    SampledSpectrum qaq = SampledSpectrum::FromRGB(c);
+    bool qwa=qaq.IsBlack();
+
     //std::cout << v << std::endl;
     // Image
-
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int samples_per_pixel =200;

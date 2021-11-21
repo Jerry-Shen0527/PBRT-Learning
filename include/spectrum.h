@@ -25,13 +25,18 @@ extern bool SpectrumSamplesSorted(const Float * lambda, const Float * vals,
 extern void SortSpectrumSamples(Float * lambda, Float * vals, int n);
 extern Float AverageSpectrumSamples(const Float * lambda, const Float * vals,
     int n, Float lambdaStart, Float lambdaEnd);
-inline void XYZToRGB(const Float xyz[3], color rgb) {
+inline void XYZToRGB(const Float xyz[3], Float * rgb) {
     rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
     rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
     rgb[2] = 0.055648f * xyz[0] - 0.204043f * xyz[1] + 1.057311f * xyz[2];
 }
+inline void XYZToRGB(const Float xyz[3], color& rgb) {
+    Float frgb[3];
+    XYZToRGB(xyz, frgb);
+    rgb[0] = frgb[0]; rgb[1] = frgb[1]; rgb[2] = frgb[2];
+}
 
-inline void RGBToXYZ(const color rgb, Float xyz[3]) {
+inline void RGBToXYZ(const Float rgb[3], Float xyz[3]) {
     xyz[0] = 0.412453f * rgb[0] + 0.357580f * rgb[1] + 0.180423f * rgb[2];
     xyz[1] = 0.212671f * rgb[0] + 0.715160f * rgb[1] + 0.072169f * rgb[2];
     xyz[2] = 0.019334f * rgb[0] + 0.119193f * rgb[1] + 0.950227f * rgb[2];
@@ -291,7 +296,7 @@ public:
         SpectrumType type = SpectrumType::Reflectance) {
         *this = s;
     }
-    static RGBSpectrum FromRGB(const color rgb,
+    static RGBSpectrum FromRGB(const Float rgb[3],
         SpectrumType type = SpectrumType::Reflectance) {
         RGBSpectrum s;
         s.c[0] = rgb[0];
@@ -300,18 +305,27 @@ public:
         CHECKNAN(s.HasNaNs());
         return s;
     }
-    void ToRGB(color rgb) const {
+    static RGBSpectrum FromRGB(const color cc,
+        SpectrumType type = SpectrumType::Reflectance) {
+        Float rgb[3] = { cc[0],cc[1],cc[2] };
+        return FromRGB(rgb, type);
+    }
+
+    void ToRGB(Float* rgb) const {
         rgb[0] = c[0];
         rgb[1] = c[1];
         rgb[2] = c[2];
     }
+    void ToRGB(color& cc) const {
+        cc[0] = c[0]; cc[1] = c[1]; cc[2] = c[2];
+    }
+
     const RGBSpectrum& ToRGBSpectrum() const { return *this; }
-    void ToXYZ(Float xyz[3]) const { color cc(c[0], c[1], c[2]); RGBToXYZ(cc, xyz); }
+    void ToXYZ(Float xyz[3]) const { RGBToXYZ(c, xyz); }
     static RGBSpectrum FromXYZ(const Float xyz[3],
         SpectrumType type = SpectrumType::Reflectance) {
         RGBSpectrum r;
-        color cc(r.c[0], r.c[1], r.c[2]);
-        XYZToRGB(xyz, cc);
+        XYZToRGB(xyz, r.c);
         return r;
     }
     Float y() const {
@@ -456,18 +470,29 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples>{
                  Float(CIE_Y_integral * nSpectralSamples);
       }
  
-      void ToRGB(color rgb) const {
+      void ToRGB(Float* rgb) const {
           Float xyz[3];
           ToXYZ(xyz);
           XYZToRGB(xyz, rgb);
       }
+      void ToRGB(color& cc) const {
+          Float xyz[3];
+          ToXYZ(xyz);
+          XYZToRGB(xyz, cc);
+      }
 
       RGBSpectrum ToRGBSpectrum() const;
       static SampledSpectrum FromRGB(
-          const color rgb, SpectrumType type = SpectrumType::Illuminant);
+          const Float rgb[3], SpectrumType type = SpectrumType::Illuminant);
+      static SampledSpectrum FromRGB(
+          const color rgb, SpectrumType type = SpectrumType::Illuminant) {
+          Float frgb[3] = { rgb[0],rgb[1],rgb[2] };
+          return FromRGB(frgb, type);
+      }
+
       static SampledSpectrum FromXYZ(
           const Float xyz[3], SpectrumType type = SpectrumType::Reflectance) {
-          color rgb;
+          Float rgb[3];
           XYZToRGB(xyz, rgb);
           return FromRGB(rgb, type);
       }
