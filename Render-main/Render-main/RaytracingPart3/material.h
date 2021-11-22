@@ -6,6 +6,13 @@
 #include "texture.h"
 #include "onb.h"
 #include "pdf.h"
+#include "spectrum.h"
+
+#ifdef PBRT_SAMPLED_SPECTRUM
+typedef SampledSpectrum Spectrum;
+#else
+typedef RGBSpectrum Spectrum;
+#endif
 
 struct hit_record;
 
@@ -13,6 +20,7 @@ struct scatter_record {
     ray specular_ray;
     bool is_specular;
     color attenuation;
+    Spectrum attenuationSpe;
     shared_ptr<pdf> pdf_ptr;
 };
 
@@ -38,12 +46,14 @@ class lambertian : public material {
 public:
     lambertian(const color& a) : albedo(make_shared<solid_color>(a)) {}
     lambertian(shared_ptr<texture> a) : albedo(a) {}
+    lambertian(const Spectrum& spe) : albedo(make_shared<solid_color>(spe.ToColor())) {}
 
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const override {
         srec.is_specular = false;
         srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+        srec.attenuationSpe = Spectrum::FromRGB(albedo->value(rec.u, rec.v, rec.p).e);
         srec.pdf_ptr = make_shared<cosine_pdf>(rec.normal);
         return true;
     }
@@ -63,6 +73,7 @@ public:
 class metal : public material {
 public:
     metal(const color& a, double f) : albedo(a), fuzz(f < 1 ? f : 1) {}
+    metal(const Spectrum& spe, double f) : albedo(spe.ToColor()), fuzz(f < 1 ? f : 1) {}
 
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record& srec
@@ -70,6 +81,7 @@ public:
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
         srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere());
         srec.attenuation = albedo;
+        srec.attenuationSpe = Spectrum::FromRGB(albedo.e);
         srec.is_specular = true;
         srec.pdf_ptr = 0;
         return true;
@@ -90,6 +102,7 @@ public:
         srec.is_specular = true;
         srec.pdf_ptr = nullptr;
         srec.attenuation = color(1.0, 1.0, 1.0);
+        srec.attenuationSpe = Spectrum::FromRGB(color(1.0, 1.0, 1.0).e);
         double refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
 
         vec3 unit_direction = unit_vector(r_in.direction());
@@ -123,6 +136,7 @@ class diffuse_light : public material {
 public:
     diffuse_light(shared_ptr<texture> a) : emit_light(a) {}
     diffuse_light(color c) : emit_light(make_shared<solid_color>(c)) {}
+    diffuse_light(const Spectrum& spe) : emit_light(make_shared<solid_color>(spe.ToColor())) {}
 
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record& srec

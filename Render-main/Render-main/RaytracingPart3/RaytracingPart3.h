@@ -18,6 +18,8 @@
 #include "bvh.h"
 #include "pdf.h"
 #include <iostream>
+//#include <omp.h>
+#include "spectrum.h"
 
 using namespace std;
 
@@ -38,20 +40,14 @@ private:
     color ray_color(
         const ray& r, const color& background, const hittable& world,
         shared_ptr<hittable>& lights, int depth);
-    /*color ray_color(
-        const ray& r, const color& background, const hittable& world,
-        hittable_list& lights, int depth);*/
+    color ray_color(
+        const ray& r, const Spectrum& background, const hittable& world,
+        shared_ptr<hittable>& lights, int depth);
     double hit_sphere(const point3& center, double radius, const ray& r);
     vector<int> write_color(color pixel_color, int samples_per_pixel);
 
-    /*hittable_list random_scene();
-    hittable_list two_spheres();
-    hittable_list two_perlin_spheres();
-    hittable_list earth();
-    hittable_list simple_light();*/
     hittable_list cornell_box();
-    //hittable_list cornell_smoke();
-    //hittable_list final_scene();
+    hittable_list cornell_boxSpe();
 
     Ui::RaytracingPart3Class ui;
     bool cal_bool = true;
