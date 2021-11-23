@@ -1,7 +1,9 @@
 # PBRT-Learning
 A group of GCLers re-implementing PBRT for code practice.
 
-## Question
+## Raytracing in one weekend
+
+### Question
 
 - ~~what is **Shadow Acne**~~
 
@@ -21,12 +23,12 @@ A group of GCLers re-implementing PBRT for code practice.
 
  - volume: `hit_distance`
 
-## Notes
+### Notes
 
 - **focal distance: **the distance between the projection point and the image plane.
 - **focus distance:** the distance between the projection point and the plane where everything is in perfect focus the *focus distance*. 
 
-## Output
+### Output
 
 - RayTracing in1weekend
 
@@ -43,3 +45,16 @@ A group of GCLers re-implementing PBRT for code practice.
 - RayTracin TheRestOfYourLife
 
   <img src=scene/raytracing_the_rest/final_scene.png width="50%" height="50%">
+
+
+
+---
+
+## Physically Based Rendering
+
+### Chapter 05
+
+1. **radiometry**
+
+   
+

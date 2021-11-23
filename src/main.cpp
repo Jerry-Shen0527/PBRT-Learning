@@ -340,7 +340,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 200;//200
+        samples_per_pixel = 50;//200
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -412,6 +412,8 @@ int main() {
 
     clock_t start, end;
     start = clock();
+
+
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
