@@ -19,8 +19,8 @@ using namespace std;
 #include "box.h"
 #include "constant_medium.h"
 #include "pdf.h"
-#include "my_image.h"
-
+//#include "my_image.h"
+#include "spectrum.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -179,6 +179,59 @@ hittable_list cornell_box() {
     return objects;
 }
 
+hittable_list cornell_box_spectrum() {
+    pbrt::Float xyzred[3] = {};
+    pbrt::Float xyzwhite[3] = {};
+    pbrt::Float xyzgreen[3] = {};
+    pbrt::Float xyzlight[3] = {};
+    
+    pbrt::Float rgbred[3] = { .65, .05, .05 };
+    pbrt::Float rgbwhite[3] = { .73, .73, .73 };
+    pbrt::Float rgbgreen[3] = { .12, .45, .15 };
+    pbrt::Float rgblight[3] = { 15, 15, 15 };
+
+    pbrt::SampledSpectrum::Init();
+    pbrt::SampledSpectrum Samp;
+    Samp = pbrt::SampledSpectrum::FromRGB(rgbred, pbrt::SpectrumType::Reflectance);
+    Samp.ToXYZ(xyzred);
+    Samp = pbrt::SampledSpectrum::FromRGB(rgbwhite, pbrt::SpectrumType::Reflectance);
+    Samp.ToXYZ(xyzwhite);
+    Samp = pbrt::SampledSpectrum::FromRGB(rgbgreen, pbrt::SpectrumType::Reflectance);
+    Samp.ToXYZ(xyzgreen);
+    Samp = pbrt::SampledSpectrum::FromRGB(rgblight, pbrt::SpectrumType::Illuminant);
+    Samp.ToXYZ(xyzlight);
+
+    hittable_list objects;
+
+    auto xyz2vec = [](pbrt::Float xyz[3]) {
+        return vec3(xyz[0], xyz[1], xyz[2]);
+    };
+
+    auto red = make_shared<lambertian>(xyz2vec(xyzred));
+    auto white = make_shared<lambertian>(xyz2vec(xyzwhite));
+    auto green = make_shared<lambertian>(xyz2vec(xyzgreen));
+    auto light = make_shared<diffuse_light>(xyz2vec(xyzlight));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    //shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), aluminum);
+    shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
+    box1 = make_shared<rotate_y>(box1, 15);
+    box1 = make_shared<translate>(box1, vec3(265, 0, 295));
+    objects.add(box1);
+
+    auto glass = make_shared<dielectric>(1.5);
+    objects.add(make_shared<sphere>(point3(190, 90, 190), 90, glass));
+
+    return objects;
+}
+
 hittable_list cornell_smoke() {
     hittable_list objects;
 
@@ -292,7 +345,8 @@ int main() {
     auto aperture = 0.0;
     color background(0, 0, 0);
 
-    switch (6) {
+    bool Isspectrum = false;
+    switch (9) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -340,7 +394,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 50;//200
+        samples_per_pixel = 100;//200
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -357,7 +411,6 @@ int main() {
         vfov = 40.0;
         break;
 
-    default:
     case 8:
         world = final_scene();
         aspect_ratio = 1.0;
@@ -368,6 +421,19 @@ int main() {
         lookfrom = point3(478, 278, -600);
         lookat = point3(278, 278, 0);
         vfov = 40.0;
+        break;
+
+    default:
+    case 9:
+        world = cornell_box_spectrum();
+        aspect_ratio = 1.0;
+        image_width = 600;
+        samples_per_pixel = 100;//200
+        background = color(0, 0, 0);
+        lookfrom = point3(278, 278, -800);
+        lookat = point3(278, 278, 0);
+        vfov = 40.0;
+        Isspectrum = true;
         break;
     }
 
@@ -409,39 +475,91 @@ int main() {
             pixel_color += ray_color(r, background, world, lights, max_depth);
         }
     };
-
+    
     clock_t start, end;
     start = clock();
-
 
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            /*
-            color pixel_color(0, 0, 0);
+           
+            //color pixel_color(0, 0, 0);
             
-            for (size_t idt = 0; idt < use_num; idt++)
-                workers[idt] = thread(work, i, j, part_samples, std::ref(pixel_color));
-            for (auto& worker : workers)
-                worker.join();
-            */
+            //for (size_t idt = 0; idt < use_num; idt++)
+             //   workers[idt] = thread(work, i, j, part_samples, std::ref(pixel_color));
+            //for (auto& worker : workers)
+             //   worker.join();
+            
 
             
             color pixel_color(0, 0, 0);
 #pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u = (i + random_double()) / (image_width - 1);
+                   auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, background, world, lights, max_depth);
             }
-            /**/
-
-            write_color(std::cout, pixel_color, samples_per_pixel);
+           
+            if (Isspectrum)
+            {
+                pbrt::Float xyz_pixel[3] = { pixel_color[0], pixel_color[1], pixel_color[2] };
+                pbrt::Float rgb_pixel[3] = {};
+                pbrt::XYZToRGB(xyz_pixel, rgb_pixel);
+                vec3 rgb_color(rgb_pixel[0], rgb_pixel[1], rgb_pixel[2]);
+                write_color(std::cout, rgb_color, samples_per_pixel);
+            }
+            else
+                write_color(std::cout, pixel_color, samples_per_pixel);
         }
     }
     end = clock();
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
 
     std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";
+    /*
+    pbrt::SampledSpectrum::Init();
+    color rgb1(0.5, 0.5, 0.5);
+    pbrt::Float rgb[3] = { 0.75, 0.25, 0.8 };
+    pbrt::Float torgb[3] = {};
+    pbrt::Float xyz[3] = {};
+    pbrt::Float xyztorgb[3] = {};
+    pbrt::Float rgbtoxyz[3] = {};
+    pbrt::SampledSpectrum sam = pbrt::SampledSpectrum::FromRGB(rgb, pbrt::SpectrumType::Reflectance);
+   
+    sam.ToXYZ(xyz);
+    pbrt::RGBToXYZ(rgb, rgbtoxyz);
+
+    sam.ToRGB(torgb);
+    pbrt::XYZToRGB(rgbtoxyz, xyztorgb);
+
+    cout << "original rgb \n";
+    for (int i = 0; i < 3; i++) {
+        cout << rgb[i] << " ";
+    }
+    cout << endl;
+
+    cout << "sam from rgb to rgb \n";
+    for (int i = 0; i < 3; i++) {
+        cout << torgb[i] << " ";
+    }
+    cout << endl;
+
+    cout << "rgb to xyz to rgb \n";
+    for (int i = 0; i < 3; i++) {
+        cout << xyztorgb[i] << " ";
+    }
+    cout << endl << "--------------" << endl;
+
+    cout << "sam from rgb to xyz: " << endl;
+    for (int i = 0; i < 3; i++) {
+        cout << xyz[i] << " ";
+    }
+
+    cout << "\n rgbtoxyz: \n";
+    for (int i = 0; i < 3; i++) {
+        cout << rgbtoxyz[i] << " ";
+    }
+    cout << endl;
+    */
 }
