@@ -5,15 +5,15 @@
 #include <iostream>
 #include "rtweekend.h"
 
-#define CHECKNAN(condition);
-#define DCHECK(condition);
-#define CHECKSORTED(lambda,vals,n);
+#define CHECKNAN(condition) (void)0
+#define DCHECK(condition) (void)0
+#define CHECKSORTED(lambda,vals,n) (void)0
 
-#ifdef DEBUG
-#define CHECKNAN(condition) if(condition) std::cout << "exist NaN!" << std::endl;
-#define DCHECK(condition) if(!condition) std::cout<<"out of range!"<<std::endl;
-#define CHECKSORTED(lambda,vals,n) if(!SpectrumSamplesSorted(lambda,vals,n)) std::cout<<"is not sorted!"<<std::endl;
-#endif // DEBUG
+#ifdef PBRT_DEBUG
+#define CHECKNAN(condition) if(condition) std::cerr << "exist NaN!" << std::endl;
+#define DCHECK(condition) if(!condition) std::cerr<<"out of range!"<<std::endl;
+#define CHECKSORTED(lambda,vals,n) if(!SpectrumSamplesSorted(lambda,vals,n)) std::cerr<<"is not sorted!"<<std::endl;
+#endif // PBRT_DEBUG
 
 
 static const int sampledLambdaStart = 400;

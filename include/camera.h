@@ -38,7 +38,7 @@ public:
 
     ray get_ray(Float s, Float t) const {
         vec3 rd = lens_radius * random_in_unit_disk();
-        vec3 offset = u * rd.x() + v * rd.y();
+        vec3 offset = u * rd.x + v * rd.y;
 
         return ray(
             origin + offset,

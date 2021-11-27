@@ -39,7 +39,7 @@ class checker_texture : public texture {
             : even(make_shared<solid_color>(c1)) , odd(make_shared<solid_color>(c2)) {}
 
         virtual color value(Float u, Float v, const point3& p) const override {
-            auto sines = sin(10*p.x())*sin(10*p.y())*sin(10*p.z());
+            auto sines = sin(10*p.x)*sin(10*p.y)*sin(10*p.z);
             //auto sines = sin(100 * u) * sin(100 * v);
             if (sines < 0)
                 return odd->value(u, v, p);
@@ -74,12 +74,12 @@ public:
     }
 
     Float noise(const point3& p) const {
-        auto u = p.x() - floor(p.x());
-        auto v = p.y() - floor(p.y());
-        auto w = p.z() - floor(p.z());
-        auto i = static_cast<int>(floor(p.x()));
-        auto j = static_cast<int>(floor(p.y()));
-        auto k = static_cast<int>(floor(p.z()));
+        auto u = p.x - floor(p.x);
+        auto v = p.y - floor(p.y);
+        auto w = p.z - floor(p.z);
+        auto i = static_cast<int>(floor(p.x));
+        auto j = static_cast<int>(floor(p.y));
+        auto k = static_cast<int>(floor(p.z));
         vec3 c[2][2][2];
 
         for (int di = 0; di < 2; di++)
@@ -174,7 +174,7 @@ public:
     noise_texture(Float sc) : scale(sc) {}
 
     virtual color value(Float u, Float v, const point3& p) const override {
-        return color(1.0,1.0,1.0) * 0.5 * (1 + sin(scale * p.z() + 10 * noise.turb(p)));
+        return color(1.0,1.0,1.0) * 0.5 * (1 + sin(scale * p.z + 10 * noise.turb(p)));
     }
 
 public:

@@ -8,9 +8,9 @@
 #include <iostream>
 
 void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) {
-    auto r = pixel_color.x();
-    auto g = pixel_color.y();
-    auto b = pixel_color.z();
+    auto r = pixel_color.x;
+    auto g = pixel_color.y;
+    auto b = pixel_color.z;
     // Replace NaN components with zero. See explanation in Ray Tracing: The Rest of Your Life.
     if (r != r) r = 0.0;
     if (g != g) g = 0.0;
@@ -29,9 +29,9 @@ void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) {
 
 //use printf
 void write_color(color pixel_color, int samples_per_pixel) {
-    auto r = pixel_color.x();
-    auto g = pixel_color.y();
-    auto b = pixel_color.z();
+    auto r = pixel_color.x;
+    auto g = pixel_color.y;
+    auto b = pixel_color.z;
 
     // Divide the color by the number of samples and gamma-correct for gamma=2.0.
     auto scale = 1.0 / samples_per_pixel;
@@ -48,9 +48,9 @@ void write_color(color pixel_color, int samples_per_pixel) {
 
 void cv_write_color(cv::Mat& image_, int i, int j, const color& pixel_color, int samples_per_pixel)
 {
-    auto r = pixel_color.x();
-    auto g = pixel_color.y();
-    auto b = pixel_color.z();
+    auto r = pixel_color.x;
+    auto g = pixel_color.y;
+    auto b = pixel_color.z;
 
     // Divide the color by the number of samples and gamma-correct for gamma=2.0.
     auto scale = 1.0 / samples_per_pixel;

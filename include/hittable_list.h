@@ -54,7 +54,7 @@ bool hittable_list::bounding_box(Float time0, Float time1, aabb& output_box) con
 
     for (const auto& object : objects) {
         if (!object->bounding_box(time0, time1, temp_box)) return false;
-        output_box = first_box ? temp_box : surrounding_box(output_box, temp_box);
+        output_box = first_box ? temp_box : Union(output_box, temp_box);
         first_box = false;
     }
 
@@ -95,7 +95,7 @@ inline bool box_compare(const shared_ptr<hittable> a, const shared_ptr<hittable>
     if (!a->bounding_box(0, 0, box_a) || !b->bounding_box(0, 0, box_b))
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
-    return box_a.min().e[axis] < box_b.min().e[axis];
+    return box_a.min()[axis] < box_b.min()[axis];
 }
 
 
@@ -153,7 +153,7 @@ bvh_node::bvh_node(
         )
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
-    box = surrounding_box(box_left, box_right);
+    box = Union(box_left, box_right);
 }
 
 bool bvh_node::bounding_box(Float time0, Float time1, aabb& output_box) const {

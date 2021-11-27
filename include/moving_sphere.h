@@ -67,7 +67,7 @@ bool moving_sphere::bounding_box(Float _time0, Float _time1, aabb& output_box) c
     aabb box1(
         center(_time1) - vec3(radius, radius, radius),
         center(_time1) + vec3(radius, radius, radius));
-    output_box = surrounding_box(box0, box1);
+    output_box = Union(box0, box1);
     return true;
 }
 #endif
