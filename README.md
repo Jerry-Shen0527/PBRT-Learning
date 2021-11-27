@@ -5,3 +5,4 @@ A group of GCLers re-implementing PBRT for code practice.
 
 VS:项目->设置 -> C/C++->语言->OpenMP 支持 ->是
 
+#### 需要OpenCV库
