@@ -21,7 +21,7 @@ public:
     void setTime(Float t0, Float t1) { _time0 = t0; _time1 = t1; };
 
     virtual bool hit(
-        const ray& r, Float t_min, Float t_max, hit_record& rec) const override;
+        const ray& r, Float t_min, Float t_max ,hit_record& rec) const override;
 
     virtual bool bounding_box(
         Float time0, Float time1, aabb& output_box) const override;
@@ -38,7 +38,7 @@ bool hittable_list::hit(const ray& r, Float t_min, Float t_max, hit_record& rec)
     for (const auto& object : objects) {
         if (object->hit(r, t_min, closest_so_far, temp_rec)) {
             hit_anything = true;
-            closest_so_far = temp_rec.t;
+            closest_so_far = temp_rec.time;
             rec = temp_rec;
         }
     }
@@ -118,7 +118,7 @@ bvh_node::bvh_node(
 ) {
     auto objects = src_objects; // Create a modifiable array of the source scene objects
 
-    int axis = random_int(0, 2);
+    int axis = RandomInt(0, 2);
     auto comparator = (axis == 0) ? box_x_compare
         : (axis == 1) ? box_y_compare
         : box_z_compare;
@@ -166,7 +166,7 @@ bool bvh_node::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) cons
         return false;
 
     bool hit_left = left->hit(r, t_min, t_max, rec);
-    bool hit_right = right->hit(r, t_min, hit_left ? rec.t : t_max, rec);
+    bool hit_right = right->hit(r, t_min, hit_left ? rec.time : t_max, rec);
 
     return hit_left || hit_right;
 }

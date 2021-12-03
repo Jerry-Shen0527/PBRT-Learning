@@ -12,6 +12,7 @@
 #include "aarect.h"
 #include "constant_medium.h"
 #include "spectrum.h"
+#include "transform.h"
 
 #include <omp.h>
 #include <time.h>
@@ -27,7 +28,7 @@ Color ray_color(const ray& r, const Color& background, const hittable& world,  s
         return Color(0.f);
 
     // If the ray hits nothing, return the background color.
-    if (!world.hit(r, 0.001, infinity, rec))
+    if (!world.hit(r, 0.001, Infinity, rec))
         return background;
     scatter_record srec;
     Color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
@@ -40,7 +41,7 @@ Color ray_color(const ray& r, const Color& background, const hittable& world,  s
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
     mixture_pdf p(light_ptr, srec.pdf_ptr);
 
-    ray scattered = ray(rec.p, p.generate(), r.time());
+    ray scattered = ray(rec.p, p.generate(), r.Time());
     auto pdf_val = p.value(scattered.direction());
    
     return emitted
@@ -71,17 +72,17 @@ hittable_list random_scene() {
     int n = 11;
     for (int a = -n; a < n; a++) {
         for (int b = -n; b < n; b++) {
-            auto choose_mat = random_Float();
-            point3 center(a + 0.9 * random_Float(), 0.2, b + 0.9 * random_Float());
+            auto choose_mat = RandomFloat();
+            point3 center(a + 0.9 * RandomFloat(), 0.2, b + 0.9 * RandomFloat());
 
-            if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+            if ((center - point3(4, 0.2, 0)).Length() > 0.9) {
                 shared_ptr<material> sphere_material;
 
                 if (choose_mat < 0.8) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    auto center2 = center + vec3(0, random_Float(0, .5), 0);
+                    auto center2 = center + vec3(0, RandomFloat(0, .5), 0);
                     world.add(make_shared<moving_sphere>(
                         center, center2, 0.0, 1.0, 0.2, sphere_material));
                     world.setTime(0.0, 1.0);
@@ -89,7 +90,7 @@ hittable_list random_scene() {
                 else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5, 1);
-                    auto fuzz = random_Float(0, 0.5);
+                    auto fuzz = RandomFloat(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
                     world.add(make_shared<sphere>(center, 0.2, sphere_material));
                 }
@@ -167,6 +168,7 @@ hittable_list cornell_box() {
 
     //blocks
     shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
+    Transform rotate1 = RotateX(15);
     box1 = make_shared<rotate_y>(box1, 15);
     box1 = make_shared<translate>(box1, vec3(265, 0, 295));
     objects.add(box1);
@@ -220,7 +222,7 @@ hittable_list final_scene() {
             auto z0 = -1000.0 + j * w;
             auto y0 = 0.0;
             auto x1 = x0 + w;
-            auto y1 = random_Float(1, 101);
+            auto y1 = RandomFloat(1, 101);
             auto z1 = z0 + w;
 
             boxes1.add(make_shared<box>(point3(x0, y0, z0), point3(x1, y1, z1), ground));
@@ -297,7 +299,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (2) {
+    switch (0) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -336,7 +338,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 1000;
+        samples_per_pixel = 4;
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -366,7 +368,7 @@ int main() {
         world = final_scene();
         aspect_ratio = 1.0;
         image_width = 800;
-        samples_per_pixel = 160;
+        samples_per_pixel = 16;
         background = color(0, 0, 0);
         lookfrom = point3(478, 278, -600);
         lookat = point3(278, 278, 0);
@@ -392,12 +394,12 @@ int main() {
     Color background_sp = Color::FromRGB(background,SpectrumType::Illuminant);
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+#pragma omp parallel for
         for (int i = 0; i < image_width; ++i) {
             Color pixel_color(0.f);
-#pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
-                auto u = (i + random_Float()) / (image_width - 1);
-                auto v = (j + random_Float()) / (image_height - 1);
+                auto u = (i + RandomFloat()) / (image_width - 1);
+                auto v = (j + RandomFloat()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r,background_sp, world,lights,max_depth);
             }

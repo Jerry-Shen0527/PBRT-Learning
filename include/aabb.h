@@ -1,15 +1,27 @@
 #ifndef AABB_H
 #define AABB_H
 
-#include "rtweekend.h"
+#include"ray.h"
+
 
 class aabb {
 public:
     aabb() {
-        pMin = point3(-infinity, -infinity, -infinity);
-        pMax = point3(infinity, infinity, infinity);
+        pMin = point3(-Infinity, -Infinity, -Infinity);
+        pMax = point3(Infinity, Infinity, Infinity);
     }
-    aabb(const point3& a, const point3& b) { pMin = a; pMax = b; }
+    aabb(const point3& p):pMin(p),pMax(p){}
+    aabb(const point3& p1, const point3& p2)  :pMin(std::min(p1.x, p2.x), std::min(p1.y, p2.y),std::min(p1.z, p2.z)),
+        pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y),std::max(p1.z, p2.z)) { }
+
+    inline point3 const operator[](int i) const{
+        IN_RANGE((i == 0 || i == 1));
+        return (i == 0) ? pMin : pMax;
+    }
+    inline point3 &operator[](int i) {
+        IN_RANGE((i == 0 || i == 1));
+        return (i == 0) ? pMin : pMax;
+    }
 
     point3 min() const { return pMin; }
     point3 max() const { return pMax; }
@@ -84,14 +96,19 @@ public:
     void BoundingSphere(point3& c, float& rad) const
     {
         c = .5f * pMin + .5f * pMax;
-        rad = Inside(c) ? Distance(c, pMax) : 0.f;
+        rad=Inside(c)?Distance(c,pMax):0.f;
     }
+    /*计算是否在ray的(0,tMax)范围*/
+    bool aabb::IntersectP(const Ray& ray, Float* hitt0, Float* hitt1) const;
+    /*通过预计算而不反复交换，但不计算是否符合ray范围*/
+    bool aabb::IntersectP(const Ray& ray, const Vector3f& invDir, const int dirIsNeg[3]) const;
+
 
     point3 pMin;
     point3 pMax;
 };
 
-aabb Union(aabb box0, aabb box1) {
+inline aabb Union(aabb box0, aabb box1) {
     point3 small(fmin(box0.min().x, box1.min().x),
         fmin(box0.min().y, box1.min().y),
         fmin(box0.min().z, box1.min().z));
@@ -104,5 +121,6 @@ aabb Union(aabb box0, aabb box1) {
 }
 
 
+using  Bounds3f = aabb;
 #endif
 

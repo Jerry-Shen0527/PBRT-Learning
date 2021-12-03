@@ -1,8 +1,15 @@
+#if defined(_MSC_VER)
+#define NOMINMAX
+#pragma once
+#endif
+
 #ifndef SPHERE_H
 #define SPHERE_H
 
 #include "hittable.h"
-#include "vec3.h"
+#include "shape.h"
+
+#include "efloat.h"
 
 class sphere : public hittable {
 public:
@@ -27,18 +34,18 @@ private:
         //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
 
         auto theta = acos(-p.y);
-        auto phi = atan2(-p.z, p.x) + pi;
+        auto phi = atan2(-p.z, p.x) + Pi;
 
-        u = phi / (2 * pi);
-        v = theta / pi;
+        u = phi / (2 * Pi);
+        v = theta / Pi;
     }
 };
 
-bool sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
+inline bool sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     vec3 oc = r.origin() - center;
-    auto a = r.direction().length_squared();
-    auto half_b = dot(oc, r.direction());
-    auto c = oc.length_squared() - radius * radius;
+    auto a = r.direction().LengthSquared();
+    auto half_b = Dot(oc, r.direction());
+    auto c = oc.LengthSquared() - radius * radius;
 
     auto discriminant = half_b * half_b - a * c;
     if (discriminant < 0) return false;
@@ -52,21 +59,65 @@ bool sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const 
             return false;
     }
 
-    rec.t = root;
-    rec.p = r.at(rec.t);
+    rec.time = root;
+    rec.p = r.at(rec.time);
     vec3 outward_normal = (rec.p - center) / radius;
     rec.set_face_normal(r, outward_normal);
-    get_sphere_uv(outward_normal, rec.u, rec.v);
+    point3 p = point3(outward_normal.x, outward_normal.y, outward_normal.z);
+    get_sphere_uv(p, rec.u, rec.v);
     rec.mat_ptr = mat_ptr;
 
     return true;
 }
 
-bool sphere::bounding_box(Float time0, Float time1, aabb& output_box) const {
+inline bool sphere::bounding_box(Float time0, Float time1, aabb& output_box) const {
     output_box = aabb(
         center - vec3(radius, radius, radius),
         center + vec3(radius, radius, radius));
     return true;
 }
+
+class Sphere : public Shape {
+public:
+    // Sphere Public Methods
+    /*zmin zmax给出截断范围，均为局部坐标。phi为[0,2*Pi]*/
+    Sphere(const Transform* ObjectToWorld, const Transform* WorldToObject,
+        bool reverseOrientation, Float radius, Float zMin, Float zMax,
+        Float phiMax)
+        : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
+        radius(radius),
+        zMin(Clamp(std::min(zMin, zMax), -radius, radius)),
+        zMax(Clamp(std::max(zMin, zMax), -radius, radius)),
+        thetaMin(std::acos(Clamp(std::min(zMin, zMax) / radius, -1, 1))),
+        thetaMax(std::acos(Clamp(std::max(zMin, zMax) / radius, -1, 1))),
+        phiMax(Radians(Clamp(phiMax, 0, 360))) {}
+
+    Sphere(const Transform* ObjectToWorld, const Transform* WorldToObject, Float radius)
+        :Shape(ObjectToWorld,WorldToObject,false),
+        radius(radius),
+        zMin(-radius),zMax(radius),thetaMin(0),thetaMax(Pi),phiMax(2*Pi){}
+
+    Bounds3f ObjectBound() const;
+    bool Intersect(const Ray& ray, Float* tHit, SurfaceInteraction* isect,
+        bool testAlphaTexture) const;
+    bool IntersectP(const Ray& ray, bool testAlphaTexture) const;
+    Float Area() const;
+    //Interaction Sample(const Point2f& u, Float* pdf) const;
+    //Interaction Sample(const Interaction& ref, const Point2f& u,
+    //    Float* pdf) const;
+    //Float Pdf(const Interaction& ref, const Vector3f& wi) const;
+    //Float SolidAngle(const Point3f& p, int nSamples) const;
+
+private:
+    // Sphere Private Data
+    const Float radius;
+    const Float zMin, zMax;
+    const Float thetaMin, thetaMax, phiMax;
+};
+
+//std::shared_ptr<Shape> CreateSphereShape(const Transform* o2w,
+//    const Transform* w2o,
+//    bool reverseOrientation,
+//    const ParamSet& params);
 
 #endif

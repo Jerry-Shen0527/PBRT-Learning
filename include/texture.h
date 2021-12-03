@@ -20,7 +20,7 @@ public:
     solid_color(Float red, Float green, Float blue)
         : solid_color(color(red,green,blue )) {}
 
-    virtual color value(Float u, Float v, const vec3& p) const override {
+    virtual color value(Float u, Float v, const point3& p) const override {
         return color_value;
     }
 
@@ -102,7 +102,7 @@ public:
         for (int i = 0; i < depth; i++) {
             accum += weight * noise(temp_p);
             weight *= 0.5;
-            temp_p *= 2;
+            temp_p = point3(2 * temp_p.x, 2 * temp_p.y, 2 * temp_p.z);
         }
 
         return fabs(accum);
@@ -129,7 +129,7 @@ private:
 
     static void permute(int* p, int n) {
         for (int i = n - 1; i > 0; i--) {
-            int target = random_int(0, i);
+            int target = RandomInt(0, i);
             int tmp = p[i];
             p[i] = p[target];
             p[target] = tmp;
@@ -161,7 +161,7 @@ private:
                     accum += (i * uu + (1 - i) * (1 - uu))
                         * (j * vv + (1 - j) * (1 - vv))
                         * (k * ww + (1 - k) * (1 - ww))
-                        * dot(c[i][j][k], weight_v);
+                        * Dot(c[i][j][k], weight_v);
                 }
 
         return accum;
@@ -211,10 +211,10 @@ public:
     ~image_texture() {
         delete data;
     }
-    virtual color value(Float u, Float v, const vec3& p) const override {
+    virtual color value(Float u, Float v, const point3& p) const override {
         // Clamp input texture coordinates to [0,1] x [1,0]
-        u = clamp(u, 0.0, 1.0);
-        v = 1.0 - clamp(v, 0.0, 1.0);  // Flip V to image coordinates
+        u = Clamp(u, 0.0, 1.0);
+        v = 1.0 - Clamp(v, 0.0, 1.0);  // Flip V to image coordinates
 
         auto i = static_cast<int>(u * width);
         auto j = static_cast<int>(v * height);
@@ -236,8 +236,8 @@ public:
             return color(0, 1, 1);
 
         // Clamp input texture coordinates to [0,1] x [1,0]
-        u = clamp(u, 0.0, 1.0);
-        v = 1.0 - clamp(v, 0.0, 1.0);  // Flip V to image coordinates
+        u = Clamp(u, 0.0, 1.0);
+        v = 1.0 - Clamp(v, 0.0, 1.0);  // Flip V to image coordinates
 
         auto i = static_cast<int>(u * width);
         auto j = static_cast<int>(v * height);

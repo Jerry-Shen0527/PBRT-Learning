@@ -34,10 +34,10 @@ point3 moving_sphere::center(Float time) const {
 }
 
 bool moving_sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
-    vec3 oc = r.origin() - center(r.time());
-    auto a = r.direction().length_squared();
-    auto half_b = dot(oc, r.direction());
-    auto c = oc.length_squared() - radius * radius;
+    vec3 oc = r.origin() - center(r.Time());
+    auto a = r.direction().LengthSquared();
+    auto half_b = Dot(oc, r.direction());
+    auto c = oc.LengthSquared() - radius * radius;
 
     auto discriminant = half_b * half_b - a * c;
     if (discriminant < 0) return false;
@@ -51,9 +51,9 @@ bool moving_sphere::hit(const ray& r, Float t_min, Float t_max, hit_record& rec)
             return false;
     }
 
-    rec.t = root;
-    rec.p = r.at(rec.t);
-    auto outward_normal = (rec.p - center(r.time())) / radius;
+    rec.time = root;
+    rec.p = r.at(rec.time);
+    auto outward_normal = (rec.p - center(r.Time())) / radius;
     rec.set_face_normal(r, outward_normal);
     rec.mat_ptr = mat_ptr;
 

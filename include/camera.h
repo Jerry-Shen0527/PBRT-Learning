@@ -16,14 +16,14 @@ public:
         Float _time0 = 0,
         Float _time1 = 0
     ) {
-        auto theta = degrees_to_radians(vfov);
+        auto theta = Radians(vfov);
         auto h = tan(theta / 2);
         auto viewport_height = 2.0 * h;
         auto viewport_width = aspect_ratio * viewport_height;
 
         w = unit_vector(lookfrom - lookat);
-        u = unit_vector(cross(vup, w));
-        v = cross(w, u);
+        u = unit_vector(Cross(vup, w));
+        v = Cross(w, u);
 
         origin = lookfrom;
         horizontal = focus_dist * viewport_width * u;
@@ -43,7 +43,7 @@ public:
         return ray(
             origin + offset,
             lower_left_corner + s * horizontal + t * vertical - origin - offset,
-            random_Float(time0, time1)
+            RandomFloat(time0, time1)
         );
     }
 

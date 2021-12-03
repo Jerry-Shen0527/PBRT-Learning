@@ -22,9 +22,9 @@ void write_color(std::ostream &out, color pixel_color, int samples_per_pixel) {
     b = sqrt(scale * b);
 
     // Write the translated [0,255] value of each color component.
-    out << static_cast<int>(256 * clamp(r, 0.0, 0.999)) << ' '
-        << static_cast<int>(256 * clamp(g, 0.0, 0.999)) << ' '
-        << static_cast<int>(256 * clamp(b, 0.0, 0.999)) << '\n';
+    out << static_cast<int>(256 * Clamp(r, 0.0, 0.999)) << ' '
+        << static_cast<int>(256 * Clamp(g, 0.0, 0.999)) << ' '
+        << static_cast<int>(256 * Clamp(b, 0.0, 0.999)) << '\n';
 }
 
 //use printf
@@ -41,9 +41,9 @@ void write_color(color pixel_color, int samples_per_pixel) {
 
     // Write the translated [0,255] value of each color component.
     printf("%d %d %d\n", 
-        static_cast<int>(256 * clamp(r, 0.0, 0.999)), 
-        static_cast<int>(256 * clamp(g, 0.0, 0.999)), 
-        static_cast<int>(256 * clamp(b, 0.0, 0.999)));
+        static_cast<int>(256 * Clamp(r, 0.0, 0.999)), 
+        static_cast<int>(256 * Clamp(g, 0.0, 0.999)), 
+        static_cast<int>(256 * Clamp(b, 0.0, 0.999)));
 }
 
 void cv_write_color(cv::Mat& image_, int i, int j, const color& pixel_color, int samples_per_pixel)
@@ -58,9 +58,9 @@ void cv_write_color(cv::Mat& image_, int i, int j, const color& pixel_color, int
     g = sqrt(scale * g);
     b = sqrt(scale * b);
 
-    image_.at<cv::Vec3b>(j, i) = { static_cast<unsigned char>(256 * clamp(b, 0.0, 0.999)),
-        static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999)),
-        static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999)) };
+    image_.at<cv::Vec3b>(j, i) = { static_cast<unsigned char>(256 * Clamp(b, 0.0, 0.999)),
+        static_cast<unsigned char>(256 * Clamp(g, 0.0, 0.999)),
+        static_cast<unsigned char>(256 * Clamp(r, 0.0, 0.999)) };
 }
 
 inline Float Gray(color c)

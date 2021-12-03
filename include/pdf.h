@@ -19,12 +19,12 @@ public:
     cosine_pdf(const vec3& w) { uvw.build_from_w(w); }
 
     virtual Float value(const vec3& direction) const override {
-        auto cosine = dot(unit_vector(direction), uvw.w());
-        return (cosine <= 0) ? 0 : cosine / pi;
+        auto cosine = Dot(unit_vector(direction), uvw.w());
+        return (cosine <= 0) ? 0 : cosine / Pi;
     }
 
     virtual vec3 generate() const override {
-        return uvw.local(random_cosine_direction());
+        return uvw.local(RandomCosineDirection());
     }
 
 public:
@@ -40,7 +40,7 @@ public:
     }
 
     virtual vec3 generate() const override {
-        return ptr->random(o);
+        return ptr->random(vec3(o.x,o.y,o.z));
     }
 
 public:
@@ -60,7 +60,7 @@ public:
     }
 
     virtual vec3 generate() const override {
-        if (random_Float() < 0.5)
+        if (RandomFloat() < 0.5)
             return p[0]->generate();
         else
             return p[1]->generate();

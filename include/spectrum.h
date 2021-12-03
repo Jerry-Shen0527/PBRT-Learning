@@ -3,7 +3,7 @@
 #define SPECTRUM
 
 #include <iostream>
-#include "rtweekend.h"
+#include "vec3.h"
 
 #define CHECKNAN(condition) (void)0
 #define DCHECK(condition) (void)0
@@ -25,6 +25,7 @@ extern bool SpectrumSamplesSorted(const Float * lambda, const Float * vals,
 extern void SortSpectrumSamples(Float * lambda, Float * vals, int n);
 extern Float AverageSpectrumSamples(const Float * lambda, const Float * vals,
     int n, Float lambdaStart, Float lambdaEnd);
+
 inline void XYZToRGB(const Float xyz[3], Float * rgb) {
     rgb[0] = 3.240479f * xyz[0] - 1.537150f * xyz[1] - 0.498535f * xyz[2];
     rgb[1] = -0.969256f * xyz[0] + 1.875991f * xyz[1] + 0.041556f * xyz[2];
@@ -224,10 +225,10 @@ public:
         return os;
     }
 
-    CoefficientSpectrum Clamp(Float low = 0, Float high = infinity) const {
+    CoefficientSpectrum Clamp(Float low = 0, Float high = Infinity) const {
         CoefficientSpectrum ret;
         for (int i = 0; i < nSpectrumSamples; ++i)
-            ret.c[i] = clamp(c[i], low, high);
+            ret.c[i] = ::Clamp(c[i], low, high);
         CHECKNAN(ret.HasNaNs());
         return ret;
     }
@@ -530,5 +531,16 @@ inline CoefficientSpectrum<n> Exp(const CoefficientSpectrum<n>& s) {
     std::cout << "outside" << std::endl;
     return ret;
 }
+
+
+
+#define USE_SPECTRUM
+#ifdef USE_SPECTRUM
+using Color = SampledSpectrum;
+#else
+using Color = RGBSpectrum;
+#endif // USE_SPECTRUM
+
+
 
 #endif // !SPECTRUM
