@@ -1,5 +1,6 @@
 #include "hittable.h"
-#include"shape.h"
+#include "shape.h"
+#include "spectrum.h"
 
 bool translate::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) const {
     ray moved_r(r.origin() - offset, r.direction(), r.Time());
@@ -90,6 +91,8 @@ bool rotate_y::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) cons
     return true;
 }
 
+
+
  SurfaceInteraction::SurfaceInteraction(const point3& p, const vec3& pError, Point2f uv, const vec3& wo, const vec3& dpdu, const vec3& dpdv, const Normal& dndu, const Normal& dndv, Float time, const Shape* shape, int faceIndex)
     : hit_record(p, Normal(Normalize(Cross(dpdu, dpdv))), pError, wo, time),
     uv(uv),
@@ -113,3 +116,28 @@ bool rotate_y::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) cons
         shading.n *= -1;
     }
 }
+
+ void SurfaceInteraction::SetShadingGeometry(const vec3& dpdus,
+     const vec3& dpdvs, const Normal& dndus,
+     const Normal& dndvs, bool orientationIsAuthoritative) {
+     shading.n = Normalize((Normal)Cross(dpdus, dpdvs));
+     if (shape && (shape->reverseOrientation ^
+         shape->transformSwapsHandedness))
+         shading.n = -shading.n;
+     if (orientationIsAuthoritative)
+         n = Faceforward(n, vec3(shading.n));
+     else
+         shading.n = Faceforward(shading.n, vec3(n));
+
+     shading.dpdu = dpdus;
+     shading.dpdv = dpdvs;
+     shading.dndu = dndus;
+     shading.dndv = dndvs;
+
+ }
+
+ RGBSpectrum SurfaceInteraction::Le(const Vector3f& w) const {
+     //const AreaLight* area = primitive->GetAreaLight();
+     //return area ? area->L(*this, w) : RGBSpectrum(0.f);
+     return RGBSpectrum(0.f);
+ }

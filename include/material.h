@@ -8,6 +8,8 @@
 #include "pdf.h"
 #include "spectrum.h"
 
+enum class TransportMode { Radiance, Importance };
+
 struct hit_record;
 
 struct scatter_record {
@@ -15,6 +17,18 @@ struct scatter_record {
     bool is_specular;
     Color attenuation;
     shared_ptr<pdf> pdf_ptr;
+};
+
+class Material {
+public:
+    // Material Interface
+    virtual void ComputeScatteringFunctions(SurfaceInteraction* si,
+        //MemoryArena& arena,
+        TransportMode mode,
+        bool allowMultipleLobes) const = 0;
+    virtual ~Material();
+    //static void Bump(const std::shared_ptr<Texture<Float>>& d,
+    //    SurfaceInteraction* si);
 };
 
 class material {

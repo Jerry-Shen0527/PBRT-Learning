@@ -26,11 +26,13 @@ std::numeric_limits<Float>::epsilon() * 0.5;
 #define IN_RANGE(condition) (void)0
 #define ZERO_DENOMINATOR(t) (void)0
 #define CHECK_LE(t1,t2) (void)0
+#define CHECK_GE(t1,t2) (void)0
 #else
 #include <iostream>
 #define IN_RANGE(condition) if (!condition) std::cerr << "vec:Out of range" << std::endl;
 #define ZERO_DENOMINATOR(t) if (t<1e-8 && t>-1e-8) std::cerr << "denominator is near zero." << std::endl;
 #define CHECK_LE(t1,t2) if(t1 > t2) std::cerr<< "Not less than" << std::endl;
+#define CHECK_GE(t1,t2) if(t1 < t2) std::cerr<< "Not greater than" <<std::endl;
 #endif // !PBRT_DEBUG
 
 
