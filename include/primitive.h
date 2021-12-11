@@ -42,6 +42,7 @@ public:
         const std::shared_ptr<AreaLight>& areaLight//,
         //const MediumInterface& mediumInterface
     );
+    GeometricPrimitive(const std::shared_ptr<Shape>& shape);
     const AreaLight* GetAreaLight() const;
     const Material* GetMaterial() const;
     void ComputeScatteringFunctions(SurfaceInteraction* isect,

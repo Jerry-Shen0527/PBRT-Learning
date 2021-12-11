@@ -19,13 +19,27 @@
 #include "spectrum.h"
 #include "transform.h"
 #include "loadobj.h"
+#include "primitive.h"
 
+Color ray_color(const ray& r, const Color& backgroung, const std::vector<GeometricPrimitive> &world) {
+    //if (r.depth >= 50)
+    //    return Color(0.f);
+    SurfaceInteraction* isec = nullptr;
+    for (int n = 0; n < world.size(); n++)
+    {
+        world[n].Intersect(r, isec);
+    }
+    if (isec == nullptr)
+        return Color(0.f);
+    else
+        return Color::FromRGB(color(0.6f, 0.8f, 0.3f));
+}
 
-Color ray_color(const ray& r, const Color& background, const hittable& world,  shared_ptr<hittable>& lights, int depth) {
+Color ray_color(const ray& r, const Color& background, const hittable& world,  shared_ptr<hittable>& lights) {
     hit_record rec;
 
     // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
+    if (r.depth >= 50)
         return Color(0.f);
 
     // If the ray hits nothing, return the background color.
@@ -37,17 +51,25 @@ Color ray_color(const ray& r, const Color& background, const hittable& world,  s
         return emitted;
     if (srec.is_specular) {
         return srec.attenuation
-            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
+            * ray_color(ray(srec.specular_ray,true), background, world, lights);
     }
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
     mixture_pdf p(light_ptr, srec.pdf_ptr);
 
-    ray scattered = ray(rec.p, p.generate(), r.Time());
+    ray scattered = ray(rec.p, p.generate(), r);
     auto pdf_val = p.value(scattered.direction());
    
     return emitted
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
+        * ray_color(scattered, background, world, lights) / pdf_val;
+}
+
+std::vector<GeometricPrimitive> new_scene()
+{
+    shared_ptr<Transform> id = make_shared<Transform>();
+    Sphere obj1(id.get(), id.get(), 10);
+    auto S1 = GeometricPrimitive(make_shared<Sphere>(obj1));
+    return { S1 };
 }
 
 hittable_list test()
@@ -285,7 +307,7 @@ int main() {
     // Image
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
-    int samples_per_pixel =16;
+    int samples_per_pixel =4;
     const int max_depth = 50;
 
     // World
@@ -299,7 +321,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (5) {
+    switch (2) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -392,6 +414,7 @@ int main() {
     clock_t start = clock();
     printf("P3\n%d %d\n255\n", image_width, image_height);
     Color background_sp = Color::FromRGB(background,SpectrumType::Illuminant);
+    std::vector<GeometricPrimitive> scene11 = new_scene();
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
 #pragma omp parallel for
@@ -401,7 +424,8 @@ int main() {
                 auto u = (i + RandomFloat()) / (image_width - 1);
                 auto v = (j + RandomFloat()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r,background_sp, world,lights,max_depth);
+                //pixel_color += ray_color(r,background_sp, world,lights);
+                pixel_color += ray_color(r, background_sp, scene11);
             }
             //write_color( pixel_color, samples_per_pixel);
             cv_write_color(image_, i, image_height - 1 - j, pixel_color.ToColor(), samples_per_pixel);

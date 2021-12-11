@@ -12,6 +12,7 @@ public:
     ray(const point3& origin, const vec3& direction, const ray& parent, Float min_t = 0.f, Float max_t = Infinity)
         :o(origin),d(direction),time(parent.time), tMin(min_t), tMax(max_t),depth(parent.depth+1)
     {}
+    ray(const ray& parent,bool p):o(parent.o),d(parent.d),time(parent.time),tMin(parent.tMin),tMax(parent.tMax), depth(parent.depth + 1){}
     Point3f operator()(Float t) const { return o + d * t; }
 
     point3 origin() const { return o; }

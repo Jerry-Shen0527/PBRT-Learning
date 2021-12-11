@@ -18,6 +18,10 @@ GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape>& shape,
    // primitiveMemory += sizeof(*this);
 }
 
+GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape>& shape) :
+    shape(shape), material(nullptr), areaLight(nullptr){}
+
+
 Bounds3f GeometricPrimitive::WorldBound() const { return shape->WorldBound(); }
 
 bool GeometricPrimitive::IntersectP(const Ray& r) const {

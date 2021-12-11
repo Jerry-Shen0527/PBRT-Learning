@@ -27,7 +27,7 @@ public:
         int maxPrimsInNode = 1,
         SplitMethod splitMethod = SplitMethod::SAH);
     Bounds3f WorldBound() const;
-    ~BVHAccel();
+    ~BVHAccel(){}
     bool Intersect(const Ray& ray, SurfaceInteraction* isect) const;
     bool IntersectP(const Ray& ray) const;
 

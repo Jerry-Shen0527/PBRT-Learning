@@ -242,6 +242,13 @@ inline vec3 random_unit_vector() {
      return point2(a * p.x, a * p.y);
  }
 
+ class Point2i {
+ public:
+     Point2i() { x = y = 0; };
+     Point2i(int e1,int e2):x(e1),y(e2){}
+     int x; int y;
+ };
+
  class vec2 {
  public:
      vec2() { x = y = 0; }
