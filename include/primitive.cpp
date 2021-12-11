@@ -57,3 +57,55 @@ void GeometricPrimitive::ComputeScatteringFunctions(
             allowMultipleLobes);
     CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
 }
+
+// TransformedPrimitive Method Definitions
+TransformedPrimitive::TransformedPrimitive(std::shared_ptr<Primitive>& primitive,
+    const AnimatedTransform& PrimitiveToWorld)
+    : primitive(primitive), PrimitiveToWorld(PrimitiveToWorld) {
+    //primitiveMemory += sizeof(*this);
+}
+
+bool TransformedPrimitive::Intersect(const Ray& r,
+    SurfaceInteraction* isect) const {
+    // Compute _ray_ after transformation by _PrimitiveToWorld_
+    Transform InterpolatedPrimToWorld;
+    PrimitiveToWorld.Interpolate(r.time, &InterpolatedPrimToWorld);
+    Ray ray = Inverse(InterpolatedPrimToWorld)(r);
+    if (!primitive->Intersect(ray, isect)) return false;
+    r.tMax = ray.tMax;
+    // Transform instance's intersection data to world space
+    if (!InterpolatedPrimToWorld.IsIdentity())
+        *isect = InterpolatedPrimToWorld(*isect);
+    CHECK_GE(Dot(isect->n, isect->shading.n), 0);
+    return true;
+}
+
+bool TransformedPrimitive::IntersectP(const Ray& r) const {
+    Transform InterpolatedPrimToWorld;
+    PrimitiveToWorld.Interpolate(r.time, &InterpolatedPrimToWorld);
+    Transform InterpolatedWorldToPrim = Inverse(InterpolatedPrimToWorld);
+    return primitive->IntersectP(InterpolatedWorldToPrim(r));
+}
+
+const AreaLight* Aggregate::GetAreaLight() const {
+    std::cerr <<
+        "Aggregate::GetAreaLight() method"<<
+        "called; should have gone to GeometricPrimitive";
+    return nullptr;
+}
+
+const Material* Aggregate::GetMaterial() const {
+    std::cerr <<
+        "Aggregate::GetMaterial() method"
+        "called; should have gone to GeometricPrimitive";
+    return nullptr;
+}
+
+void Aggregate::ComputeScatteringFunctions(SurfaceInteraction* isect,
+    //MemoryArena& arena,
+    TransportMode mode,
+    bool allowMultipleLobes) const {
+    std::cerr <<
+        "Aggregate::ComputeScatteringFunctions() method"
+        "called; should have gone to GeometricPrimitive";
+}

@@ -82,6 +82,13 @@ public:
             return 2;
     }
 
+    Point3f Corner(int corner) const {
+        IN_RANGE((corner >= 0 && corner < 8));
+        return Point3f((*this)[(corner & 1)].x,
+            (*this)[(corner & 2) ? 1 : 0].y,
+            (*this)[(corner & 4) ? 1 : 0].z);
+    }
+
     point3 Lerp(Float tx, Float ty, Float tz) const
     {
         return point3(::Lerp(tx, pMin.x, pMax.y), ::Lerp(ty, pMin.y, pMax.y), ::Lerp(tz, pMin.z, pMax.z));

@@ -15,7 +15,7 @@ find_package(OpenCV REQUIRED)
 # directory of opencv headers
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-FILE(GLOB SC_FILES "*.cpp" "include/*.h")
+FILE(GLOB SC_FILES "*.cpp" "include/*.cpp" "include/*.h")
 
 # name of executable file and path of source file
 add_executable(${PROJECT_NAME} ${SC_FILES})
@@ -23,4 +23,11 @@ add_executable(${PROJECT_NAME} ${SC_FILES})
 # directory of opencv library
 link_directories(${OpenCV_LIBRARY_DIRS})
 # opencv libraries
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+
+find_package(Assimp REQUIRED)
+
+message("Assimp lib has ${ASSIMP_LIBS}")
+include_directories(${ASSIMP_INCLUDE_DIRS})
+
+
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} assimp::assimp)

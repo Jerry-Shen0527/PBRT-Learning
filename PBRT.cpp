@@ -1,5 +1,10 @@
 ﻿// PBRT.cpp: 定义应用程序的入口点。
 //
+#include <omp.h>
+#include <time.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "rtweekend.h"
 #include "color.h"
@@ -13,12 +18,8 @@
 #include "constant_medium.h"
 #include "spectrum.h"
 #include "transform.h"
+#include "loadobj.h"
 
-#include <omp.h>
-#include <time.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
 
 Color ray_color(const ray& r, const Color& background, const hittable& world,  shared_ptr<hittable>& lights, int depth) {
     hit_record rec;
@@ -276,11 +277,10 @@ hittable_list final_scene() {
 
 
 int main() {
-    vec3 a(1, 1, 1);
-    //a[-1];
-    //CoefficientSpectrum<15> v(0.0);
-    SampledSpectrum::Init();
+    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
+    Mesh pwp = qwq.meshes[0];
 
+    SampledSpectrum::Init();
     //std::cout << v << std::endl;
     // Image
     auto aspect_ratio = 16.0 / 9.0;
@@ -299,7 +299,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (0) {
+    switch (5) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -426,3 +426,5 @@ int main() {
     cv::imwrite("E:\\PBRT\\PBRT-Learning\\image\\qwq_4.png", result4);
     
 }
+
+
