@@ -8,7 +8,7 @@
 class Shape {
 public:
     // Shape Interface
-    Shape(const Transform* ObjectToWorld, const Transform* WorldToObject,
+    Shape(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
         bool reverseOrientation);
     virtual ~Shape();
     virtual Bounds3f ObjectBound() const = 0;
@@ -41,7 +41,8 @@ public:
     //virtual Float SolidAngle(const Point3f& p, int nSamples = 512) const;
 
     // Shape Public Data
-    const Transform* ObjectToWorld, * WorldToObject;
+    //const Transform* ObjectToWorld, * WorldToObject;
+    shared_ptr<Transform> ObjectToWorld, WorldToObject;
     const bool reverseOrientation;
     const bool transformSwapsHandedness;
 };

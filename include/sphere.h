@@ -81,7 +81,7 @@ class Sphere : public Shape {
 public:
     // Sphere Public Methods
     /*zmin zmax给出截断范围，均为局部坐标。phi为[0,2*Pi]*/
-    Sphere(const Transform* ObjectToWorld, const Transform* WorldToObject,
+    Sphere(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
         bool reverseOrientation, Float radius, Float zMin, Float zMax,
         Float phiMax)
         : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
@@ -92,7 +92,7 @@ public:
         thetaMax(std::acos(Clamp(std::max(zMin, zMax) / radius, -1, 1))),
         phiMax(Radians(Clamp(phiMax, 0, 360))) {}
 
-    Sphere(const Transform* ObjectToWorld, const Transform* WorldToObject, Float radius)
+    Sphere(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject, Float radius)
         :Shape(ObjectToWorld,WorldToObject,false),
         radius(radius),
         zMin(-radius),zMax(radius),thetaMin(0),thetaMax(Pi),phiMax(2*Pi){}

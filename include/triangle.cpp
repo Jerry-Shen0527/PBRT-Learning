@@ -2,7 +2,7 @@
 #include "triangle.h"
 
 TriangleMesh::TriangleMesh(
-    const Transform& ObjectToWorld, int nTriangles, const int* vertexIndices,
+    shared_ptr<Transform> ObjectToWorld, int nTriangles, const int* vertexIndices,
     int nVertices, const Point3f* P, const Vector3f* S, const Normal3f* N,
     const Point2f* UV,// const std::shared_ptr<Texture<Float>>& alphaMask,
     //const std::shared_ptr<Texture<Float>>& shadowAlphaMask,
@@ -22,7 +22,7 @@ TriangleMesh::TriangleMesh(
 
     // Transform mesh vertices to world space
     p.reset(new Point3f[nVertices]);
-    for (int i = 0; i < nVertices; ++i) p[i] = ObjectToWorld(P[i]);
+    for (int i = 0; i < nVertices; ++i) p[i] = (*ObjectToWorld)(P[i]);
 
     // Copy _UV_, _N_, and _S_ vertex data, if present
     if (UV) {
@@ -31,19 +31,26 @@ TriangleMesh::TriangleMesh(
     }
     if (N) {
         n.reset(new Normal3f[nVertices]);
-        for (int i = 0; i < nVertices; ++i) n[i] = ObjectToWorld(N[i]);
+        for (int i = 0; i < nVertices; ++i) n[i] = (*ObjectToWorld)(N[i]);
     }
     if (S) {
         s.reset(new Vector3f[nVertices]);
-        for (int i = 0; i < nVertices; ++i) s[i] = ObjectToWorld(S[i]);
+        for (int i = 0; i < nVertices; ++i) s[i] = (*ObjectToWorld)(S[i]);
     }
 
     if (fIndices)
         faceIndices = std::vector<int>(fIndices, fIndices + nTriangles);
+    else
+    {
+        faceIndices = std::vector<int>(nTriangles);
+        int n = 0;
+        for (auto& iter : faceIndices)
+            iter = n++;
+    }
 }
 
 std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
-    const Transform* ObjectToWorld, const Transform* WorldToObject,
+    shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
     bool reverseOrientation, int nTriangles,
     const int* vertexIndices, int nVertices, const Point3f* p,
     const Vector3f* s, const Normal3f* n, const Point2f* uv,
@@ -52,7 +59,7 @@ std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     const int* faceIndices)
 {
     std::shared_ptr<TriangleMesh> mesh = std::make_shared<TriangleMesh>(
-        *ObjectToWorld, nTriangles, vertexIndices, nVertices, p, s, n, uv, faceIndices);
+        ObjectToWorld, nTriangles, vertexIndices, nVertices, p, s, n, uv, faceIndices);
     //,alphaMask, shadowAlphaMask, faceIndices);
     std::vector<std::shared_ptr<Shape>> tris;
     for (int i = 0; i < nTriangles; ++i)

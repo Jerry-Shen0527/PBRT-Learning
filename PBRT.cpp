@@ -10,6 +10,7 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "triangle.h"
 #include "camera.h"
 #include "material.h"
 #include "moving_sphere.h"
@@ -24,12 +25,14 @@
 Color ray_color(const ray& r, const Color& backgroung, const std::vector<GeometricPrimitive> &world) {
     //if (r.depth >= 50)
     //    return Color(0.f);
-    SurfaceInteraction* isec = nullptr;
+    SurfaceInteraction isec;
+    bool flag = false;
     for (int n = 0; n < world.size(); n++)
     {
-        world[n].Intersect(r, isec);
+        if (world[n].Intersect(r, &isec))
+            flag = true;
     }
-    if (isec == nullptr)
+    if (flag==false)
         return Color(0.f);
     else
         return Color::FromRGB(color(0.6f, 0.8f, 0.3f));
@@ -63,13 +66,30 @@ Color ray_color(const ray& r, const Color& background, const hittable& world,  s
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
         * ray_color(scattered, background, world, lights) / pdf_val;
 }
+extern std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+    shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
+    bool reverseOrientation, int nTriangles,
+    const int* vertexIndices, int nVertices, const Point3f* p,
+    const Vector3f* s, const Normal3f* n, const Point2f* uv,
+    //const std::shared_ptr<Texture<Float>>& alphaMask),
+    //const std::shared_ptr<Texture<Float>>& shadowAlphaMask,
+    const int* faceIndices);
 
 std::vector<GeometricPrimitive> new_scene()
 {
     shared_ptr<Transform> id = make_shared<Transform>();
-    Sphere obj1(id.get(), id.get(), 10);
+    Sphere obj1(id, id, 1);
     auto S1 = GeometricPrimitive(make_shared<Sphere>(obj1));
-    return { S1 };
+    
+    std::vector<GeometricPrimitive> scene;
+    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
+    Mesh pwp = qwq.meshes[0];
+    auto cube=CreateTriangleMesh(id, id, false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
+    for (auto& iter : cube)
+    {
+        scene.push_back(iter);
+    }
+    return scene;
 }
 
 hittable_list test()
@@ -299,8 +319,6 @@ hittable_list final_scene() {
 
 
 int main() {
-    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
-    Mesh pwp = qwq.meshes[0];
 
     SampledSpectrum::Init();
     //std::cout << v << std::endl;

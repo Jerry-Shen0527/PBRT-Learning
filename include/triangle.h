@@ -14,7 +14,7 @@
 /*输入为局部坐标，而类的p n 等中存储世界坐标*/
 struct TriangleMesh {
     // TriangleMesh Public Methods
-    TriangleMesh(const Transform& ObjectToWorld, int nTriangles,
+    TriangleMesh(shared_ptr<Transform> ObjectToWorld, int nTriangles,
         const int* vertexIndices, int nVertices, const Point3f* P,
         const Vector3f* S, const Normal3f* N, const Point2f* uv,
         //const std::shared_ptr<Texture<Float>>& alphaMask,
@@ -36,7 +36,7 @@ struct TriangleMesh {
 class Triangle :public Shape {
 public:
     // Triangle Public Methods
-    Triangle(const Transform* ObjectToWorld, const Transform* WorldToObject,
+    Triangle(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
         bool reverseOrientation, const std::shared_ptr<TriangleMesh>& mesh,
         int triNumber)
         : Shape(ObjectToWorld, WorldToObject, reverseOrientation), mesh(mesh) {
