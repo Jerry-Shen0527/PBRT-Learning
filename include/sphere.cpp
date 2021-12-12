@@ -109,7 +109,7 @@ bool Sphere::Intersect(const Ray& r, Float* tHit, SurfaceInteraction* isect,
     *isect = (*ObjectToWorld)(SurfaceInteraction(pHit, pError, Point2f(u, v),
         -ray.d, dpdu, dpdv, dndu, dndv,
         ray.time, this));
-
+    isect->n = Normal(pHit - ray.o);
     // Update _tHit_ for quadric intersection
     *tHit = (Float)tShapeHit;
     return true;

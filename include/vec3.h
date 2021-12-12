@@ -65,6 +65,14 @@ public:
         return x * x + y * y + z * z;
     }
 
+    vec3 Normalize() {
+        Float norm = Length();
+        x /= norm;
+        y /= norm;
+        z /= norm;
+        return (*this);
+    }
+
     inline static vec3 random() {
         return vec3(RandomFloat(), RandomFloat(), RandomFloat());
     }

@@ -65,6 +65,9 @@ bool hittable_list::bounding_box(Float time0, Float time1, aabb& output_box) con
 #ifndef BVH_H
 #define BVH_H
 
+//class pbrt_bch_node :public Primitive {
+//
+//};
 
 class bvh_node : public hittable {
 public:

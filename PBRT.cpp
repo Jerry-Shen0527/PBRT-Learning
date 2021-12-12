@@ -22,20 +22,74 @@
 #include "loadobj.h"
 #include "primitive.h"
 
-Color ray_color(const ray& r, const Color& backgroung, const std::vector<GeometricPrimitive> &world) {
-    //if (r.depth >= 50)
-    //    return Color(0.f);
-    SurfaceInteraction isec;
-    bool flag = false;
-    for (int n = 0; n < world.size(); n++)
-    {
-        if (world[n].Intersect(r, &isec))
-            flag = true;
-    }
-    if (flag==false)
+Color ray_color(const ray& r, const Color& background, const std::vector<GeometricPrimitive> &obj, const hittable& world, shared_ptr<hittable>& lights) {
+    if (r.depth >= 50)
         return Color(0.f);
+    SurfaceInteraction isec;
+    hit_record rec;
+
+    bool is_isec = false;
+    bool flag_obj = false;
+    bool flag_world = false;
+    for (int n = 0; n < obj.size(); n++)
+    {
+        if (obj[n].Intersect(r, &isec))
+        {
+            flag_obj = true;
+            is_isec = true;
+        }
+    }
+    if (!world.hit(r, 0.001, r.tMax, rec))
+    {   
+        if (flag_obj == false)
+            return background;
+        else //intersect triangle obj
+        {
+            // light
+            //return Color(0.9f) /** ray_color(ray(r,true), background, obj, world, lights)*/;
+            //lambert
+            if(Dot(r.d,vec3(isec.n))<0)
+                isec.n = -isec.n;
+            
+            auto light_ptr = make_shared<hittable_pdf>(lights, isec.p);
+            auto scatter_pdf = make_shared<cosine_pdf>(vec3(isec.n));
+            mixture_pdf p(light_ptr, scatter_pdf);
+
+            ray scattered = ray(isec.p, p.generate(), r);
+            auto pdf_val = p.value(scattered.direction());
+
+            auto cosine = Dot(vec3(isec.n), unit_vector(scattered.direction()));
+            cosine = cosine < 0 ? 0 : cosine / Pi;
+            return Color::FromRGB(vec3(0.9f,0.85f,0.92f)*0.8) * cosine
+                * ray_color(scattered, background, obj, world, lights) / pdf_val;
+        }
+           
+    }
     else
-        return Color::FromRGB(color(0.6f, 0.8f, 0.3f));
+    {
+        scatter_record srec;
+        Color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+        if (!rec.mat_ptr->scatter(r, rec, srec))
+            return emitted;
+        if (srec.is_specular) {
+            return srec.attenuation
+                * ray_color(ray(srec.specular_ray, true), background, obj, world, lights);
+        }
+        auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+        mixture_pdf p(light_ptr, srec.pdf_ptr);
+
+        ray scattered = ray(rec.p, p.generate(), r);
+        auto pdf_val = p.value(scattered.direction());
+
+        return emitted
+            + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+            * ray_color(scattered, background, obj, world, lights) / pdf_val;
+
+    }
+    //if (flag_obj ==false)
+    //    return Color(0.f);
+    //else
+    //    return Color::FromRGB(vec3(isec.n));
 }
 
 Color ray_color(const ray& r, const Color& background, const hittable& world,  shared_ptr<hittable>& lights) {
@@ -66,6 +120,7 @@ Color ray_color(const ray& r, const Color& background, const hittable& world,  s
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
         * ray_color(scattered, background, world, lights) / pdf_val;
 }
+
 extern std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
     bool reverseOrientation, int nTriangles,
@@ -81,10 +136,17 @@ std::vector<GeometricPrimitive> new_scene()
     Sphere obj1(id, id, 1);
     auto S1 = GeometricPrimitive(make_shared<Sphere>(obj1));
     
+    Transform Scale(Float x, Float y, Float z);
+    
+    shared_ptr<Transform> small = make_shared<Transform>(Scale(0.025, 0.025, 0.025)* Rotate(-90.0f, vec3(1,0,0)));
+    //shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(365,100,200))*Scale(100, 100, 100) );
+    shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(365, 100, 200)) * Scale(2.5, 2.5, 2.5) * Rotate(-90.0f, vec3(1, 0, 0)) * Rotate(-90.0f, vec3(0, 0, 1)));
+
     std::vector<GeometricPrimitive> scene;
-    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
+    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\Cat_head.obj");
     Mesh pwp = qwq.meshes[0];
-    auto cube=CreateTriangleMesh(id, id, false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
+    
+    auto cube=CreateTriangleMesh(big,make_shared<Transform>(Inverse(*big)), false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
     for (auto& iter : cube)
     {
         scene.push_back(iter);
@@ -166,8 +228,8 @@ hittable_list two_spheres() {
     auto checker = make_shared<checker_texture>(c3, color(0.9, 0.9, 0.9));
     //auto checker = make_shared<checker_texture>(color(0.3, 0.1, 0.1), color(0.9, 0.9, 0.9));
     
-    objects.add(make_shared<sphere>(point3(0, -10, 0), 10, make_shared<lambertian>(checker)));
-    objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0, -10, -5), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0, 10, -5), 10, make_shared<lambertian>(checker)));
 
     return objects;
 }
@@ -199,7 +261,7 @@ hittable_list cornell_box() {
     auto red = make_shared<lambertian>(color(.65, .05, .05));
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
-    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+    auto light = make_shared<diffuse_light>(color(20, 18, 15));
 
     //walls
     objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
@@ -325,7 +387,7 @@ int main() {
     // Image
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
-    int samples_per_pixel =4;
+    int samples_per_pixel =20;
     const int max_depth = 50;
 
     // World
@@ -339,7 +401,7 @@ int main() {
 
     color background(0, 0, 0);
 
-    switch (2) {
+    switch (5) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -378,7 +440,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 4;
+        samples_per_pixel = 50;
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -443,7 +505,7 @@ int main() {
                 auto v = (j + RandomFloat()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 //pixel_color += ray_color(r,background_sp, world,lights);
-                pixel_color += ray_color(r, background_sp, scene11);
+                pixel_color += ray_color(r, background_sp, scene11, world, lights);
             }
             //write_color( pixel_color, samples_per_pixel);
             cv_write_color(image_, i, image_height - 1 - j, pixel_color.ToColor(), samples_per_pixel);
