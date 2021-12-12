@@ -179,11 +179,20 @@ inline bool box_compare(const shared_ptr<Primitive> a, const shared_ptr<Primitiv
     aabb box_b;
     return a->WorldBound().min()[axis] < b->WorldBound().max()[axis];
 }
+inline bool box_compare_xx(const shared_ptr<Primitive> a, const shared_ptr<Primitive> b) {
+    return box_compare(a, b, 0);
+}
+inline bool box_compare_yy(const shared_ptr<Primitive> a, const shared_ptr<Primitive> b) {
+    return box_compare(a, b, 1);
+}
+inline bool box_compare_zz(const shared_ptr<Primitive> a, const shared_ptr<Primitive> b) {
+    return box_compare(a, b, 2);
+}
 
 class pbrt_bvh_node :public Primitive
 {
 public:
-    pbrt_bvh_node(const std::vector<shared_ptr<Primitive>> objects,int start,int end);
+    pbrt_bvh_node(const std::vector<shared_ptr<Primitive>>& src_objects,int start,int end);
     ~pbrt_bvh_node();
 
 private:
@@ -204,47 +213,52 @@ private:
     aabb box;
 };
 
-pbrt_bvh_node::pbrt_bvh_node(const std::vector<shared_ptr<Primitive>> objects, int start, int end)
+pbrt_bvh_node::pbrt_bvh_node(const std::vector<shared_ptr<Primitive>>& src_objects, int start, int end)
 {
-    //auto objects = src_objects; // Create a modifiable array of the source scene objects
+    auto objects = src_objects; // Create a modifiable array of the source scene objects
+    aabb world_box = objects[start]->WorldBound();
+    for (int n=start+1;n<=end;n++)
+    {
+        world_box = Union(world_box, objects[n]->WorldBound());
+    }
+    int axis = world_box.MaximumExtent();
 
-    //int axis = RandomInt(0, 2);
-    //auto comparator = (axis == 0) ? box_x_compare
-    //    : (axis == 1) ? box_y_compare
-    //    : box_z_compare;
+    auto comparator = (axis == 0) ? box_compare_xx
+        : (axis == 1) ? box_compare_yy
+        : box_compare_zz;
 
-    //size_t object_span = end - start;
     int object_span = end - start;
     if (object_span == 1) {
         left = right = objects[start];
     }
-    //else if (object_span == 2) {
-    //    if (comparator(objects[start], objects[start + 1])) {
-    //        left = objects[start];
-    //        right = objects[start + 1];
-    //    }
-    //    else {
-    //        left = objects[start + 1];
-    //        right = objects[start];
-    //    }
-    //}
-    //else {
-    //    std::sort(objects.begin() + start, objects.begin() + end, comparator);
+    else if (object_span == 2) {
+        if (box_compare(objects[start], objects[start + 1], axis)) {
+            left = objects[start];
+            right = objects[start + 1];
+        }
+        else {
+            left = objects[start + 1];
+            right = objects[start];
+        }
+    }
+    else {
+        std::sort(objects.begin() + start, objects.begin() + end, comparator);
 
-    //    auto mid = start + object_span / 2;
-    //    left = make_shared<bvh_node>(objects, start, mid, time0, time1);
-    //    right = make_shared<bvh_node>(objects, mid, end, time0, time1);
-    //}
+        auto mid = start + object_span / 2;
+        left = make_shared<pbrt_bvh_node>(objects, start, mid);
+        right = make_shared<pbrt_bvh_node>(objects, mid, end);
+    }
 
-    //aabb box_left, box_right;
+    aabb box_left, box_right;
 
+    box_left = left->WorldBound();
+    box_right = right->WorldBound();
     //if (!left->bounding_box(time0, time1, box_left)
     //    || !right->bounding_box(time0, time1, box_right)
     //    )
     //    std::cerr << "No bounding box in bvh_node constructor.\n";
 
-    //box = Union(box_left, box_right);
-
+    box = Union(box_left, box_right);
 
 }
 

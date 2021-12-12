@@ -22,7 +22,7 @@
 #include "loadobj.h"
 #include "primitive.h"
 
-Color ray_color(const ray& r, const Color& background, const std::vector<GeometricPrimitive> &obj, const hittable& world, shared_ptr<hittable>& lights) {
+Color ray_color(const ray& r, const Color& background, const std::vector<shared_ptr<Primitive>> &obj, const hittable& world, shared_ptr<hittable>& lights) {
     if (r.depth >= 50)
         return Color(0.f);
     SurfaceInteraction isec;
@@ -33,7 +33,7 @@ Color ray_color(const ray& r, const Color& background, const std::vector<Geometr
     bool flag_world = false;
     for (int n = 0; n < obj.size(); n++)
     {
-        if (obj[n].Intersect(r, &isec))
+        if (obj[n]->Intersect(r, &isec))
         {
             flag_obj = true;
             is_isec = true;
@@ -48,7 +48,7 @@ Color ray_color(const ray& r, const Color& background, const std::vector<Geometr
             // light
             //  return Color(0.9f) /** ray_color(ray(r,true), background, obj, world, lights)*/;
             //lambert
-            if(Dot(r.d,vec3(isec.n))<0)
+            if(Dot(r.d,vec3(isec.n)) > 0)
                 isec.n = -isec.n;
             
             auto light_ptr = make_shared<hittable_pdf>(lights, isec.p);
@@ -60,7 +60,7 @@ Color ray_color(const ray& r, const Color& background, const std::vector<Geometr
 
             auto cosine = Dot(vec3(isec.n), unit_vector(scattered.direction()));
             cosine = cosine < 0 ? 0 : cosine / Pi;
-            return Color::FromRGB(vec3(0.85f,0.7f,0.85f)) * cosine
+            return Color::FromRGB(vec3(191,184,241)/255.0) * cosine
                 * ray_color(scattered, background, obj, world, lights) / pdf_val;
         }
            
@@ -130,7 +130,7 @@ extern std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     //const std::shared_ptr<Texture<Float>>& shadowAlphaMask,
     const int* faceIndices);
 
-std::vector<GeometricPrimitive> new_scene()
+std::vector<shared_ptr<Primitive>> new_scene()
 {
     shared_ptr<Transform> id = make_shared<Transform>();
     Sphere obj1(id, id, 1);
@@ -142,17 +142,18 @@ std::vector<GeometricPrimitive> new_scene()
     //shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(365,100,200))*Scale(100, 100, 100) );
     Transform cube_pre = Scale(30, 30, 30);
     shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(-450,0,-100))*Scale(2,2,2)*Translate(vec3(365, 100, 200)) * Scale(2.5, 2.5, 2.5) * Rotate(-90.0f, vec3(1, 0, 0)) * Rotate(-90.0f, vec3(0, 0, 1)));
-    shared_ptr<Transform> cube_trans = make_shared<Transform>((*big) * cube_pre);
-    std::vector<GeometricPrimitive> scene;
-    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
+    shared_ptr<Transform> cube_trans = make_shared<Transform>((*big) * cube_pre* Rotate(45, vec3(0, 1, 0)));
+    shared_ptr<Transform> hot_dog_trans = make_shared<Transform>(Translate(vec3(-450, 0, -100)) * Scale(2, 2, 2) * Translate(vec3(365, 100, 200)) * Scale(2.5, 2.5, 2.5) * Rotate(20,vec3(1,0,0))*Rotate(45, vec3(0, 0, 1)) * Rotate(180, vec3(0, 1, 0)));
+    std::vector< shared_ptr<Primitive> > scene;
+    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\Hot\ dog.obj");
     Mesh pwp = qwq.meshes[0];
-    
-    auto cube=CreateTriangleMesh(cube_trans,make_shared<Transform>(Inverse(*cube_trans)), false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
+    auto cube=CreateTriangleMesh(hot_dog_trans,make_shared<Transform>(Inverse(*hot_dog_trans)), false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
     for (auto& iter : cube)
     {
-        scene.push_back(iter);
+        scene.push_back(make_shared<GeometricPrimitive>(iter));
     }
-    return scene;
+
+    return { make_shared<pbrt_bvh_node>(scene, 0, scene.size() - 1) };
 }
 
 hittable_list test()
@@ -441,7 +442,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 4;
+        samples_per_pixel = 100;
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -495,7 +496,7 @@ int main() {
     clock_t start = clock();
     printf("P3\n%d %d\n255\n", image_width, image_height);
     Color background_sp = Color::FromRGB(background,SpectrumType::Illuminant);
-    std::vector<GeometricPrimitive> scene11 = new_scene();
+    std::vector<shared_ptr<Primitive>> scene11 = new_scene();
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
 #pragma omp parallel for
