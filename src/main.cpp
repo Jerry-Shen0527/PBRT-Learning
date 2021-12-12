@@ -22,6 +22,8 @@ using namespace std;
 //#include "my_image.h"
 #include "spectrum.h"
 
+#include "geometry.h"
+
 color ray_color(
     const ray& r, const color& background, const hittable& world,
     const shared_ptr<hittable>& lights, int depth
@@ -180,15 +182,15 @@ hittable_list cornell_box() {
 }
 
 hittable_list cornell_box_spectrum() {
-    pbrt::Float xyzred[3] = {};
-    pbrt::Float xyzwhite[3] = {};
-    pbrt::Float xyzgreen[3] = {};
-    pbrt::Float xyzlight[3] = {};
+    Float xyzred[3] = {};
+    Float xyzwhite[3] = {};
+    Float xyzgreen[3] = {};
+    Float xyzlight[3] = {};
     
-    pbrt::Float rgbred[3] = { .65, .05, .05 };
-    pbrt::Float rgbwhite[3] = { .73, .73, .73 };
-    pbrt::Float rgbgreen[3] = { .12, .45, .15 };
-    pbrt::Float rgblight[3] = { 15, 15, 15 };
+    Float rgbred[3] = { .65, .05, .05 };
+    Float rgbwhite[3] = { .73, .73, .73 };
+    Float rgbgreen[3] = { .12, .45, .15 };
+    Float rgblight[3] = { 15, 15, 15 };
 
     pbrt::SampledSpectrum::Init();
     pbrt::SampledSpectrum Samp;
@@ -203,7 +205,7 @@ hittable_list cornell_box_spectrum() {
 
     hittable_list objects;
 
-    auto xyz2vec = [](pbrt::Float xyz[3]) {
+    auto xyz2vec = [](Float xyz[3]) {
         return vec3(xyz[0], xyz[1], xyz[2]);
     };
 
@@ -503,8 +505,8 @@ int main() {
            
             if (Isspectrum)
             {
-                pbrt::Float xyz_pixel[3] = { pixel_color[0], pixel_color[1], pixel_color[2] };
-                pbrt::Float rgb_pixel[3] = {};
+                Float xyz_pixel[3] = { pixel_color[0], pixel_color[1], pixel_color[2] };
+                Float rgb_pixel[3] = {};
                 pbrt::XYZToRGB(xyz_pixel, rgb_pixel);
                 vec3 rgb_color(rgb_pixel[0], rgb_pixel[1], rgb_pixel[2]);
                 write_color(std::cout, rgb_color, samples_per_pixel);

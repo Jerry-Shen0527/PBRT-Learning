@@ -1,0 +1,5 @@
+namespace pbrt {
+	class Medium {
+
+	};
+}

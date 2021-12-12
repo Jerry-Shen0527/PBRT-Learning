@@ -8,9 +8,12 @@
 #include <string>
 #include <vector>
 
+#include "rtweekend.h"
+
 
 
 namespace pbrt {
+    /**/
     class RGBSpectrum;
     template <int nSpectrumSamples>
     class CoefficientSpectrum;
@@ -21,7 +24,7 @@ namespace pbrt {
     typedef RGBSpectrum Spectrum;
 #endif
 
-    typedef double Float;
+    //typedef double Float;
     inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
     inline void CHECK_NE(Float a, Float b) {}
     inline void DCHECK(bool b) {}
