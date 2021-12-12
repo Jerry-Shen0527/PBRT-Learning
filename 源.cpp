@@ -13,6 +13,7 @@
 //#include "pdf.h"
 //#include <windows.h>
 #include "myh.h"
+#include <omp.h>
 
 
 
@@ -52,6 +53,7 @@ void fun1()
         }
     }
 }
+
 void fun2()
 {
     for (int j = t2 - 1; j >= t1; --j) {
@@ -72,8 +74,80 @@ void fun2()
 
 void fun3()
 {
-    for (int j = image_height-1; j >= t2; --j) {
+    for (int j = t3-1; j >= t2; --j) {
         std::cerr << "\rScanlines remaining: " << j -t2<< ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color pixel_color(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, background, world, lights, max_depth);
+            }
+            picture[j][i] = pixel_color;
+            //std::cout << picture[j][i];
+        }
+    }
+}
+
+void fun4()
+{
+    for (int j = t4-1; j >= t3; --j) {
+        std::cerr << "\rScanlines remaining: " << j - t3 << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color pixel_color(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, background, world, lights, max_depth);
+            }
+            picture[j][i] = pixel_color;
+            //std::cout << picture[j][i];
+        }
+    }
+}
+
+void fun5()
+{
+    for (int j = t5 - 1; j >= t4; --j) {
+        std::cerr << "\rScanlines remaining: " << j - t4 << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color pixel_color(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, background, world, lights, max_depth);
+            }
+            picture[j][i] = pixel_color;
+            //std::cout << picture[j][i];
+        }
+    }
+}
+
+void fun6()
+{
+    for (int j = t6 - 1; j >= t5; --j) {
+        std::cerr << "\rScanlines remaining: " << j - t5 << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color pixel_color(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, background, world, lights, max_depth);
+            }
+            picture[j][i] = pixel_color;
+            //std::cout << picture[j][i];
+        }
+    }
+}
+
+void fun7()
+{
+    for (int j = image_height - 1; j >= t6; --j) {
+        std::cerr << "\rScanlines remaining: " << j - t6 << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
             color pixel_color(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -90,6 +164,7 @@ void fun3()
 
 int main() {
 
+    
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
@@ -103,15 +178,23 @@ int main() {
     
     // Render
     //¶àÏß³Ì
-    std::thread t1(fun0);
-    std::thread t2(fun1);
-    std::thread t3(fun2);
-    std::thread t4(fun3);
+    std::thread x1(fun0);
+    std::thread x2(fun1);
+    std::thread x3(fun2);
+    std::thread x4(fun3);
+    std::thread x5(fun4);
+    std::thread x6(fun5);
+    std::thread x7(fun6);
+    std::thread x8(fun7);
 
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
+    x1.join();
+    x2.join();
+    x3.join();
+    x4.join();
+    x5.join();
+    x6.join();
+    x7.join();
+    x8.join();
 
     
     if (ifspectrum) {

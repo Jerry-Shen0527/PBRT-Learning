@@ -1,16 +1,17 @@
-#ifndef SPHERE_H
-#define SPHERE_H
+#ifndef MSPHERE_H
+#define MSPHERE_H
 
 #include "hittable.h"
 #include "vec3.h"
 #include "pdf.h"
+#include "mtransform.h"
 
-class sphere : public hittable {
+class msphere : public hittable {
 public:
-    sphere() {}
-    sphere(point3 cen, double r, shared_ptr<material> m)
-        : center(cen), radius(r), mat_ptr(m) {};
-    
+    msphere() {}
+    msphere(Transform otw, Transform wto, double r, shared_ptr<material> m)
+        : ObjectToWorld(otw), WorldToObject(wto), radius(r), mat_ptr(m) {};
+    // const Transform*...
 
     virtual bool hit(
         const ray& r, double t_min, double t_max, hit_record& rec) const override;
@@ -21,11 +22,12 @@ public:
 
     vec3 random(const point3& o) const;
     //it seems no apply
-
 public:
     point3 center;
     double radius;
     shared_ptr<material> mat_ptr;
+    Transform ObjectToWorld, WorldToObject;
+
 private:
     static void get_sphere_uv(const point3& p, double& u, double& v) {
         // p: a given point on the sphere of radius one, centered at the origin.
@@ -43,8 +45,13 @@ private:
     }
 };
 
-bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+bool msphere::hit(const ray& wr, double t_min, double t_max, hit_record& rec) const {
+
+    ray r = WorldToObject.ray_transform(wr);
+
+
     vec3 oc = r.origin() - center;
+
     auto a = r.direction().length_squared();
     auto half_b = dot(oc, r.direction());
     auto c = oc.length_squared() - radius * radius;
@@ -60,11 +67,13 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
         if (root < t_min || t_max < root)
             return false;
     }
+    
+    r = ObjectToWorld.ray_transform(r);
 
     rec.t = root;
-    rec.p = r.at(rec.t);
-    vec3 outward_normal = (rec.p - center) / radius;
-    rec.set_face_normal(r, outward_normal);
+    rec.p = wr.at(rec.t);
+    vec3 outward_normal = (rec.p - ObjectToWorld.point_transform(center)) / radius;
+    rec.set_face_normal(wr, outward_normal);
     get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat_ptr = mat_ptr;
 
@@ -73,14 +82,14 @@ bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) cons
     return true;
 }
 
-bool sphere::bounding_box(double time0, double time1, aabb& output_box) const {
+bool msphere::bounding_box(double time0, double time1, aabb& output_box) const {
     output_box = aabb(
-        center - vec3(radius, radius, radius),
-        center + vec3(radius, radius, radius));
+        ObjectToWorld.point_transform(center) - vec3(radius, radius, radius),
+        ObjectToWorld.point_transform(center) + vec3(radius, radius, radius));
     return true;
 }
 
-double sphere::pdf_value(const point3& o, const vec3& v) const {
+double msphere::pdf_value(const point3& o, const vec3& v) const {
     hit_record rec;
     if (!this->hit(ray(o, v), 0.001, infinity, rec))
         return 0;
@@ -91,7 +100,7 @@ double sphere::pdf_value(const point3& o, const vec3& v) const {
     return  1 / solid_angle;
 }
 
-vec3 sphere::random(const point3& o) const {
+vec3 msphere::random(const point3& o) const {
     vec3 direction = center - o;
     auto distance_squared = direction.length_squared();
     onb uvw;

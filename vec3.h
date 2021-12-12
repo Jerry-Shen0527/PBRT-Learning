@@ -6,6 +6,7 @@
 
 using std::sqrt;
 
+
 class vec3 {
 public:
     vec3() : e{ 0,0,0 } {}
@@ -18,6 +19,14 @@ public:
     vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
     double operator[](int i) const { return e[i]; }
     double& operator[](int i) { return e[i]; }
+    
+    /*vec3& operator=(const vec3& v)
+    {
+        e[0] = v.e[0];
+        e[1] = v.e[1];
+        e[2] = v.e[2];
+        return *this;
+    }*/
 
     vec3& operator+=(const vec3& v) {
         e[0] += v.e[0];
@@ -115,6 +124,7 @@ inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
 
+
 //The random_in_unit_sphere() function
 vec3 random_in_unit_sphere() {
     while (true) {
@@ -166,4 +176,47 @@ inline vec3 random_cosine_direction() {
 
     return vec3(x, y, z);
 }
+
+double mincomponent(const vec3& u)
+{
+    return std::min(u.e[0], std::min(u.e[1], u.e[2]));
+}
+
+double maxcomponent(const vec3& u)
+{
+    return std::max(u.e[0], std::max(u.e[1], u.e[2]));
+}
+
+int maxdimension(const vec3& u)
+{
+    return (u.e[0] > u.e[1]) ? (u.e[0] > u.e[2] ? 0 : 2) : (u.e[1] > u.e[2] ? 1 : 2);
+}
+
+vec3 min(const vec3& u, const vec3& v)
+{
+    return vec3(std::min(u.e[0], v.e[0]), std::min(u.e[1], v.e[1]), std::min(u.e[2], v.e[2]));
+}
+
+vec3 max(const vec3& u, const vec3& v)
+{
+    return vec3(std::max(u.e[0], v.e[0]), std::max(u.e[1], v.e[1]), std::max(u.e[2], v.e[2]));
+}
+
+
+vec3 permutes(const vec3& u, int x, int y, int z)
+{
+    return vec3(u.e[x], u.e[y], u.e[z]);
+}
+
+vec3 vector_abs(const vec3& v)
+{
+    return vec3(std::abs(v.e[0]), std::abs(v.e[1]), std::abs(v.e[2]));
+}
+
+
+
+
+
+
+
 #endif

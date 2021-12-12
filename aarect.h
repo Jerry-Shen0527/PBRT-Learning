@@ -33,7 +33,7 @@ public:
 
         return distance_squared / (cosine * area);
     }
-
+    // no apply
     virtual vec3 random(const point3& origin) const override {
         auto random_point = point3(random_double(x0, x1), k, random_double(y0, y1));
         return random_point - origin;
