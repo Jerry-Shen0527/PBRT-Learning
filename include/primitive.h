@@ -20,7 +20,7 @@ public:
     // Primitive Interface
     virtual ~Primitive(){}
     virtual aabb WorldBound() const = 0;
-    virtual bool Intersect(const Ray& r, SurfaceInteraction*) const = 0;
+    virtual bool Intersect(const Ray& r, SurfaceInteraction* isect) const = 0;
     virtual bool IntersectP(const Ray& r) const = 0;
     //virtual const AreaLight* GetAreaLight() const = 0;
     virtual const Material* GetMaterial() const = 0;

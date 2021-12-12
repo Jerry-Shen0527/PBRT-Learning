@@ -3,6 +3,7 @@
 
 #include "hittable.h"
 #include "rtweekend.h"
+#include "primitive.h"
 
 #include <memory>
 #include <vector>
@@ -65,10 +66,6 @@ bool hittable_list::bounding_box(Float time0, Float time1, aabb& output_box) con
 #ifndef BVH_H
 #define BVH_H
 
-//class pbrt_bch_node :public Primitive {
-//
-//};
-
 class bvh_node : public hittable {
 public:
     bvh_node();
@@ -114,6 +111,7 @@ bool box_y_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
 bool box_z_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b) {
     return box_compare(a, b, 2);
 }
+
 
 
 bvh_node::bvh_node(
@@ -175,5 +173,120 @@ bool bvh_node::hit(const ray& r, Float t_min, Float t_max, hit_record& rec) cons
     return hit_left || hit_right;
 }
 
+
+inline bool box_compare(const shared_ptr<Primitive> a, const shared_ptr<Primitive> b, int axis) {
+    aabb box_a;
+    aabb box_b;
+    return a->WorldBound().min()[axis] < b->WorldBound().max()[axis];
+}
+
+class pbrt_bvh_node :public Primitive
+{
+public:
+    pbrt_bvh_node(const std::vector<shared_ptr<Primitive>> objects,int start,int end);
+    ~pbrt_bvh_node();
+
+private:
+
+    // Í¨¹ý Primitive ¼Ì³Ð
+    virtual aabb WorldBound() const override;
+
+    virtual bool Intersect(const Ray& r, SurfaceInteraction* isect) const override;
+
+    virtual bool IntersectP(const Ray& r) const override;
+
+    virtual const Material* GetMaterial() const override;
+
+    virtual void ComputeScatteringFunctions(SurfaceInteraction* isect, TransportMode mode, bool allowMultipleLobes) const override;
+
+    shared_ptr<Primitive> left;
+    shared_ptr<Primitive> right;
+    aabb box;
+};
+
+pbrt_bvh_node::pbrt_bvh_node(const std::vector<shared_ptr<Primitive>> objects, int start, int end)
+{
+    //auto objects = src_objects; // Create a modifiable array of the source scene objects
+
+    //int axis = RandomInt(0, 2);
+    //auto comparator = (axis == 0) ? box_x_compare
+    //    : (axis == 1) ? box_y_compare
+    //    : box_z_compare;
+
+    //size_t object_span = end - start;
+    int object_span = end - start;
+    if (object_span == 1) {
+        left = right = objects[start];
+    }
+    //else if (object_span == 2) {
+    //    if (comparator(objects[start], objects[start + 1])) {
+    //        left = objects[start];
+    //        right = objects[start + 1];
+    //    }
+    //    else {
+    //        left = objects[start + 1];
+    //        right = objects[start];
+    //    }
+    //}
+    //else {
+    //    std::sort(objects.begin() + start, objects.begin() + end, comparator);
+
+    //    auto mid = start + object_span / 2;
+    //    left = make_shared<bvh_node>(objects, start, mid, time0, time1);
+    //    right = make_shared<bvh_node>(objects, mid, end, time0, time1);
+    //}
+
+    //aabb box_left, box_right;
+
+    //if (!left->bounding_box(time0, time1, box_left)
+    //    || !right->bounding_box(time0, time1, box_right)
+    //    )
+    //    std::cerr << "No bounding box in bvh_node constructor.\n";
+
+    //box = Union(box_left, box_right);
+
+
+}
+
+pbrt_bvh_node::~pbrt_bvh_node()
+{
+}
+
+aabb pbrt_bvh_node::WorldBound() const
+{
+    return box;
+}
+
+bool pbrt_bvh_node::Intersect(const Ray& r, SurfaceInteraction* isect) const
+{
+
+    if (!box.hit(r, r.tMin, r.tMax))
+           return false;
+
+    bool hit_left = left->Intersect(r, isect);
+    bool hit_right = right->Intersect(r, isect);
+
+    return hit_left || hit_right;
+}
+
+bool pbrt_bvh_node::IntersectP(const Ray& r) const
+{
+    if (!box.hit(r, r.tMin, r.tMax))
+        return false;
+
+    bool hit_left = left->IntersectP(r);
+    bool hit_right = right->IntersectP(r);
+
+    return hit_left || hit_right;
+}
+
+const Material* pbrt_bvh_node::GetMaterial() const
+{
+    return nullptr;
+}
+
+void pbrt_bvh_node::ComputeScatteringFunctions(SurfaceInteraction* isect, TransportMode mode, bool allowMultipleLobes) const
+{
+}
 
 #endif

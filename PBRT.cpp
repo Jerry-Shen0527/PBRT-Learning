@@ -46,7 +46,7 @@ Color ray_color(const ray& r, const Color& background, const std::vector<Geometr
         else //intersect triangle obj
         {
             // light
-            //return Color(0.9f) /** ray_color(ray(r,true), background, obj, world, lights)*/;
+            //  return Color(0.9f) /** ray_color(ray(r,true), background, obj, world, lights)*/;
             //lambert
             if(Dot(r.d,vec3(isec.n))<0)
                 isec.n = -isec.n;
@@ -60,7 +60,7 @@ Color ray_color(const ray& r, const Color& background, const std::vector<Geometr
 
             auto cosine = Dot(vec3(isec.n), unit_vector(scattered.direction()));
             cosine = cosine < 0 ? 0 : cosine / Pi;
-            return Color::FromRGB(vec3(0.9f,0.85f,0.92f)*0.8) * cosine
+            return Color::FromRGB(vec3(0.85f,0.7f,0.85f)) * cosine
                 * ray_color(scattered, background, obj, world, lights) / pdf_val;
         }
            
@@ -140,13 +140,14 @@ std::vector<GeometricPrimitive> new_scene()
     
     shared_ptr<Transform> small = make_shared<Transform>(Scale(0.025, 0.025, 0.025)* Rotate(-90.0f, vec3(1,0,0)));
     //shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(365,100,200))*Scale(100, 100, 100) );
-    shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(365, 100, 200)) * Scale(2.5, 2.5, 2.5) * Rotate(-90.0f, vec3(1, 0, 0)) * Rotate(-90.0f, vec3(0, 0, 1)));
-
+    Transform cube_pre = Scale(30, 30, 30);
+    shared_ptr<Transform> big = make_shared<Transform>(Translate(vec3(-450,0,-100))*Scale(2,2,2)*Translate(vec3(365, 100, 200)) * Scale(2.5, 2.5, 2.5) * Rotate(-90.0f, vec3(1, 0, 0)) * Rotate(-90.0f, vec3(0, 0, 1)));
+    shared_ptr<Transform> cube_trans = make_shared<Transform>((*big) * cube_pre);
     std::vector<GeometricPrimitive> scene;
-    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\Cat_head.obj");
+    Model qwq("D:\\QWQ\\data\\mesh\\triangle mesh\\cube.obj");
     Mesh pwp = qwq.meshes[0];
     
-    auto cube=CreateTriangleMesh(big,make_shared<Transform>(Inverse(*big)), false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
+    auto cube=CreateTriangleMesh(cube_trans,make_shared<Transform>(Inverse(*cube_trans)), false, pwp.f_num, pwp.f_indics, pwp.v_num, pwp.v_pos, pwp.vt, pwp.vn, pwp.uv, nullptr);
     for (auto& iter : cube)
     {
         scene.push_back(iter);
@@ -261,7 +262,7 @@ hittable_list cornell_box() {
     auto red = make_shared<lambertian>(color(.65, .05, .05));
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
-    auto light = make_shared<diffuse_light>(color(20, 18, 15));
+    auto light = make_shared<diffuse_light>(color(20, 18, 15)*2);
 
     //walls
     objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
@@ -271,17 +272,17 @@ hittable_list cornell_box() {
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
 
-    //blocks
-    shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
-    Transform rotate1 = RotateX(15);
-    box1 = make_shared<rotate_y>(box1, 15);
-    box1 = make_shared<translate>(box1, vec3(265, 0, 295));
-    objects.add(box1);
+    ////blocks
+    //shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
+    //Transform rotate1 = RotateX(15);
+    //box1 = make_shared<rotate_y>(box1, 15);
+    //box1 = make_shared<translate>(box1, vec3(265, 0, 295));
+    //objects.add(box1);
 
-    shared_ptr<hittable> box2 = make_shared<box>(point3(0, 0, 0), point3(165, 165, 165), white);
-    box2 = make_shared<rotate_y>(box2, -18);
-    box2 = make_shared<translate>(box2, vec3(130, 0, 65));
-    objects.add(box2);
+    //shared_ptr<hittable> box2 = make_shared<box>(point3(0, 0, 0), point3(165, 165, 165), white);
+    //box2 = make_shared<rotate_y>(box2, -18);
+    //box2 = make_shared<translate>(box2, vec3(130, 0, 65));
+    //objects.add(box2);
 
     return objects;
 }
@@ -440,7 +441,7 @@ int main() {
         world = cornell_box();
         aspect_ratio = 1.0;
         image_width = 600;
-        samples_per_pixel = 50;
+        samples_per_pixel = 4;
         background = color(0, 0, 0);
         lookfrom = point3(278, 278, -800);
         lookat = point3(278, 278, 0);
@@ -500,6 +501,7 @@ int main() {
 #pragma omp parallel for
         for (int i = 0; i < image_width; ++i) {
             Color pixel_color(0.f);
+
             for (int s = 0; s < samples_per_pixel; ++s) {
                 auto u = (i + RandomFloat()) / (image_width - 1);
                 auto v = (j + RandomFloat()) / (image_height - 1);
