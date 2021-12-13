@@ -10,7 +10,7 @@ class moving_sphere : public hittable {
 public:
     moving_sphere() {}
     moving_sphere(
-        point3 cen0, point3 cen1, double _time0, double _time1, double r, shared_ptr<material> m)
+        Point3f cen0, Point3f cen1, double _time0, double _time1, double r, shared_ptr<material> m)
         : center0(cen0), center1(cen1), time0(_time0), time1(_time1), radius(r), mat_ptr(m)
     {};
 
@@ -19,10 +19,10 @@ public:
     virtual bool bounding_box(
         double _time0, double _time1, aabb& output_box) const override;
 
-    point3 center(double time) const;
+    Point3f center(double time) const;
 
 public:
-    point3 center0, center1;
+    Point3f center0, center1;
     double time0, time1;
     double radius;
     shared_ptr<material> mat_ptr;

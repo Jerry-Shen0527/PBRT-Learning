@@ -3,7 +3,7 @@
 bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
     // Print occasional samples when debugging. To enable, set enableDebug true.
     const bool enableDebug = false;
-    const bool debugging = enableDebug && random_double() < 0.00001;
+    const bool debugging = enableDebug && random_Float() < 0.00001;
 
     hit_record rec1, rec2;
 
@@ -24,9 +24,9 @@ bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& 
     if (rec1.t < 0)
         rec1.t = 0;
 
-    const auto ray_length = r.direction().length();
+    const auto ray_length = r.direction().Length();
     const auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-    const auto hit_distance = neg_inv_density * log(random_double());
+    const auto hit_distance = neg_inv_density * log(random_Float());
 
     if (hit_distance > distance_inside_boundary)
         return false;
@@ -40,7 +40,7 @@ bool constant_medium::hit(const ray& r, double t_min, double t_max, hit_record& 
             << "rec.p = " << rec.p << '\n';
     }
 
-    rec.normal = vec3(1, 0, 0);  // arbitrary
+    rec.normal = Normal3f(1, 0, 0);  // arbitrary
     rec.front_face = true;     // also arbitrary
     rec.mat_ptr = phase_function;
 

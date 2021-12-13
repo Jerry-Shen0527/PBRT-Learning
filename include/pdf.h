@@ -7,22 +7,22 @@ class pdf {
 public:
     virtual ~pdf() {}
 
-    virtual double value(const vec3& direction) const = 0;
-    virtual vec3 generate() const = 0;
+    virtual double value(const Vector3f& direction) const = 0;
+    virtual Vector3f generate() const = 0;
 };
 
 class cosine_pdf : public pdf {
 public:
-    cosine_pdf(const vec3& w) { uvw.build_from_w(w); }
-
+    cosine_pdf(const Vector3f& w) { uvw.build_from_w(w); }
+    cosine_pdf(const Normal3f& w) { uvw.build_from_w(w); }
     //caculate sample_pdf
-    virtual double value(const vec3& direction) const override {
-        auto cosine = dot(unit_vector(direction), uvw.w());
+    virtual double value(const Vector3f& direction) const override {
+        auto cosine = Dot(unit_vector(direction), uvw.w());
         return (cosine <= 0) ? 0 : cosine / pi;
     }
 
     //generate/sample a direction according some distribution like random_cosine_direction()
-    virtual vec3 generate() const override {
+    virtual Vector3f generate() const override {
         return uvw.local(random_cosine_direction());
     }
 
@@ -34,20 +34,20 @@ public:
 //sample in hittable like plane light
 class hittable_pdf : public pdf {
 public:
-    hittable_pdf(shared_ptr<hittable> p, const point3& origin) : ptr(p), o(origin) {}
+    hittable_pdf(shared_ptr<hittable> p, const Point3f& origin) : ptr(p), o(origin) {}
 
     //caculate sample_pdf
-    virtual double value(const vec3& direction) const override {
+    virtual double value(const Vector3f& direction) const override {
         return ptr->pdf_value(o, direction);
     }
 
     //generate/sample a direction according some distribution like random_cosine_direction()
-    virtual vec3 generate() const override {
+    virtual Vector3f generate() const override {
         return ptr->random(o);
     }
 
 public:
-    point3 o;
+    Point3f o;
     shared_ptr<hittable> ptr;
 };
 
@@ -58,12 +58,12 @@ public:
         p[1] = p1;
     }
 
-    virtual double value(const vec3& direction) const override {
+    virtual double value(const Vector3f& direction) const override {
         return 0.5 * p[0]->value(direction) + 0.5 * p[1]->value(direction);
     }
 
-    virtual vec3 generate() const override {
-        if (random_double() < 0.5)
+    virtual Vector3f generate() const override {
+        if (random_Float() < 0.5)
             return p[0]->generate();
         else
             return p[1]->generate();
@@ -73,16 +73,16 @@ public:
     shared_ptr<pdf> p[2];
 };
 
-inline vec3 random_to_sphere(double radius, double distance_squared) {
-    auto r1 = random_double();
-    auto r2 = random_double();
+inline Vector3f random_to_sphere(double radius, double distance_squared) {
+    auto r1 = random_Float();
+    auto r2 = random_Float();
     auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
 
     auto phi = 2 * pi * r1;
     auto x = cos(phi) * sqrt(1 - z * z);
     auto y = sin(phi) * sqrt(1 - z * z);
 
-    return vec3(x, y, z);
+    return Vector3f(x, y, z);
 }
 
 #endif

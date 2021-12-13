@@ -8,24 +8,29 @@ class onb {
 public:
     onb() {}
 
-    inline vec3 operator[](int i) const { return axis[i]; }
+    inline Vector3f operator[](int i) const { return axis[i]; }
 
-    vec3 u() const { return axis[0]; }
-    vec3 v() const { return axis[1]; }
-    vec3 w() const { return axis[2]; }
+    Vector3f u() const { return axis[0]; }
+    Vector3f v() const { return axis[1]; }
+    Vector3f w() const { return axis[2]; }
 
-    vec3 local(double a, double b, double c) const {
+    Vector3f local(double a, double b, double c) const {
         return a * u() + b * v() + c * w();
     }
 
-    vec3 local(const vec3& a) const {
-        return a.x() * u() + a.y() * v() + a.z() * w();
+    Vector3f local(const Point3f& a) const {
+        return a.x * u() + a.y * v() + a.z * w();
     }
 
-    void build_from_w(const vec3&);
+    Vector3f local(const Vector3f& a) const {
+        return a.x * u() + a.y * v() + a.z * w();
+    }
+
+    void build_from_w(const Normal3f&);
+    void build_from_w(const Vector3f&);
 
 public:
-    vec3 axis[3];
+    Vector3f axis[3];
 };
 
 

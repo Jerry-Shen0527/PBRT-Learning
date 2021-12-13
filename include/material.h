@@ -34,7 +34,7 @@ public:
     }
 
     virtual color emitted(
-        const ray& r_in, const hit_record& rec, double u, double v, const point3& p
+        const ray& r_in, const hit_record& rec, double u, double v, const Point3f& p
     ) const {
         return color(0, 0, 0);
     }
@@ -59,7 +59,7 @@ public:
     double scattering_pdf(
         const ray& r_in, const hit_record& rec, const ray& scattered
     ) const {
-        auto cosine = dot(rec.normal, unit_vector(scattered.direction()));
+        auto cosine = Dot(rec.normal, unit_vector(scattered.direction()));
         return cosine < 0 ? 0 : cosine / pi;
     }
 
@@ -77,7 +77,7 @@ public:
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const override {
-        vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+        Vector3f reflected = reflect(unit_vector(r_in.direction()), rec.normal);
         srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time());// r_in.time()
         srec.attenuation = albedo;
         srec.is_specular = true;
@@ -104,14 +104,14 @@ public:
         srec.attenuation = color(1.0, 1.0, 1.0);
         double refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
 
-        vec3 unit_direction = unit_vector(r_in.direction());
-        double cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0);
+        Vector3f unit_direction = unit_vector(r_in.direction());
+        double cos_theta = fmin(Dot(-unit_direction, rec.normal), 1.0);
         double sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
         bool cannot_refract = refraction_ratio * sin_theta > 1.0;
-        vec3 direction;
+        Vector3f direction;
 
-        if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
+        if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_Float())
             direction = reflect(unit_direction, rec.normal);
         else
             direction = refract(unit_direction, rec.normal, refraction_ratio);
@@ -149,7 +149,7 @@ public:
     }
 
     virtual color emitted(const ray& r_in, const hit_record& rec, double u, double v,
-        const point3& p) const override {
+        const Point3f& p) const override {
 
         if (rec.front_face)
             return emit->value(u, v, p);
