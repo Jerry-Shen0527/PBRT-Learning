@@ -572,7 +572,7 @@ inline std::ostream& operator<<(std::ostream& os, const Point3<Float>& v) {
 }
 
 using Point3f = Point3<Float>;
-//using Point2f = Point2<Float>;
+using Point2f = Point2<Float>;
 
 /*
 class vec3 {
@@ -1050,6 +1050,42 @@ Normal3<T> Abs(const Normal3<T>& v) {
     return Normal3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
 }
 
+inline Point3f OffsetRayOrigin(const Point3f& p, const Vector3f& pError,
+    const Normal3f& n, const Vector3f& w) {
+    Float d = Dot(Abs(n), pError);
+    Vector3f offset = d * Vector3f(n);
+    if (Dot(w, n) < 0) offset = -offset;
+    Point3f po = p + offset;
+    // Round offset point _po_ away from _p_
+    for (int i = 0; i < 3; ++i) {
+        if (offset[i] > 0)
+            po[i] = NextFloatUp(po[i]);
+        else if (offset[i] < 0)
+            po[i] = NextFloatDown(po[i]);
+    }
+    return po;
+}
+
+inline Vector3f SphericalDirection(Float sinTheta, Float cosTheta, Float phi) {
+    return Vector3f(sinTheta * std::cos(phi), sinTheta * std::sin(phi),
+        cosTheta);
+}
+
+inline Vector3f SphericalDirection(Float sinTheta, Float cosTheta, Float phi,
+    const Vector3f& x, const Vector3f& y,
+    const Vector3f& z) {
+    return sinTheta * std::cos(phi) * x + sinTheta * std::sin(phi) * y +
+        cosTheta * z;
+}
+
+inline Float SphericalTheta(const Vector3f& v) {
+    return std::acos(Clamp(v.z, -1, 1));
+}
+
+inline Float SphericalPhi(const Vector3f& v) {
+    Float p = std::atan2(v.y, v.x);
+    return (p < 0) ? (p + 2 * pi) : p;
+}
 
 
 // vec3 Utility Functions

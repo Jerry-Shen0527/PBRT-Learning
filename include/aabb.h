@@ -25,6 +25,77 @@ public:
     Point3f min() const { return pMin; }
     Point3f max() const { return pMax; }
 
+    bool operator==(const aabb& b) const {
+        return b.pMin == pMin && b.pMax == pMax;
+    }
+    bool operator!=(const aabb& b) const {
+        return b.pMin != pMin || b.pMax != pMax;
+    }
+    const Point3f& operator[](int i) const
+    {
+        //DCHECK(i == 0 || i == 1);
+        return (i == 0) ? pMin : pMax;
+    }
+    Point3f& operator[](int i)
+    {
+        //DCHECK(i == 0 || i == 1);
+        return (i == 0) ? pMin : pMax;
+    }
+
+    Point3f Corner(int corner) const {
+        //DCHECK(corner >= 0 && corner < 8);
+        return Point3f((*this)[(corner & 1)].x,
+            (*this)[(corner & 2) ? 1 : 0].y,
+            (*this)[(corner & 4) ? 1 : 0].z);
+    }
+    /*
+    Vector3<T> Diagonal() const { return pMax - pMin; }
+    T SurfaceArea() const {
+        Vector3<T> d = Diagonal();
+        return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
+    }
+    T Volume() const {
+        Vector3<T> d = Diagonal();
+        return d.x * d.y * d.z;
+    }
+    int MaximumExtent() const {
+        Vector3<T> d = Diagonal();
+        if (d.x > d.y && d.x > d.z)
+            return 0;
+        else if (d.y > d.z)
+            return 1;
+        else
+            return 2;
+    }
+    Point3<T> Lerp(const Point3f& t) const {
+        return Point3<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
+            pbrt::Lerp(t.y, pMin.y, pMax.y),
+            pbrt::Lerp(t.z, pMin.z, pMax.z));
+    }
+    Vector3<T> Offset(const Point3<T>& p) const {
+        Vector3<T> o = p - pMin;
+        if (pMax.x > pMin.x) o.x /= pMax.x - pMin.x;
+        if (pMax.y > pMin.y) o.y /= pMax.y - pMin.y;
+        if (pMax.z > pMin.z) o.z /= pMax.z - pMin.z;
+        return o;
+    }
+    void BoundingSphere(Point3<T>* center, Float* radius) const {
+        *center = (pMin + pMax) / 2;
+        *radius = Inside(*center, *this) ? Distance(*center, pMax) : 0;
+    }
+    template <typename U>
+    explicit operator Bounds3<U>() const {
+        return Bounds3<U>((Point3<U>)pMin, (Point3<U>)pMax);
+    }
+    bool IntersectP(const Ray& ray, Float* hitt0 = nullptr,
+        Float* hitt1 = nullptr) const;
+    inline bool IntersectP(const Ray& ray, const Vector3f& invDir,
+        const int dirIsNeg[3]) const;
+    friend std::ostream& operator<<(std::ostream& os, const Bounds3<T>& b) {
+        os << "[ " << b.pMin << " - " << b.pMax << " ]";
+        return os;
+    }*/
+
     bool hit(const ray& r, double t_min, double t_max) const;
 
     Point3f pMin, pMax;
@@ -55,6 +126,77 @@ inline aabb surrounding_box(aabb box0, aabb box1) {
         fmax(box0.max().z, box1.max().z));
 
     return aabb(small, big);
+}
+
+//Bounding unity
+//template <typename T>
+inline aabb Union(const aabb& b, const Point3f& p) {
+    aabb ret;
+    ret.pMin = Min(b.pMin, p);
+    ret.pMax = Max(b.pMax, p);
+    return ret;
+}
+
+//template <typename T>
+inline aabb Union(const aabb& b1, const aabb& b2) {
+    aabb ret;
+    ret.pMin = Min(b1.pMin, b2.pMin);
+    ret.pMax = Max(b1.pMax, b2.pMax);
+    return ret;
+}
+
+//template <typename T>
+inline aabb Intersect(const aabb& b1, const aabb& b2) {
+    // Important: assign to pMin/pMax directly and don't run the Bounds2()
+    // constructor, since it takes min/max of the points passed to it.  In
+    // turn, that breaks returning an invalid bound for the case where we
+    // intersect non-overlapping bounds (as we'd like to happen).
+    aabb ret;
+    ret.pMin = Max(b1.pMin, b2.pMin);
+    ret.pMax = Min(b1.pMax, b2.pMax);
+    return ret;
+}
+
+//template <typename T>
+inline bool Overlaps(const aabb& b1, const aabb& b2) {
+    bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
+    bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
+    bool z = (b1.pMax.z >= b2.pMin.z) && (b1.pMin.z <= b2.pMax.z);
+    return (x && y && z);
+}
+
+//template <typename T>
+inline bool Inside(const Point3f& p, const aabb& b) {
+    return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
+        p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
+}
+
+//template <typename T>
+inline bool InsideExclusive(const Point3f& p, const aabb& b) {
+    return (p.x >= b.pMin.x && p.x < b.pMax.x&& p.y >= b.pMin.y &&
+        p.y < b.pMax.y&& p.z >= b.pMin.z && p.z < b.pMax.z);
+}
+
+//template <typename T, typename U>
+template<typename U>
+inline aabb Expand(const aabb& b, U delta) {
+    return aabb(b.pMin - Vector3f(delta, delta, delta),
+        b.pMax + Vector3f(delta, delta, delta));
+}
+
+// Minimum squared distance from point to box; returns zero if point is
+// inside.
+template <typename T>
+inline Float DistanceSquared(const Point3<T>& p, const aabb& b) {
+    Float dx = std::max({ Float(0), b.pMin.x - p.x, p.x - b.pMax.x });
+    Float dy = std::max({ Float(0), b.pMin.y - p.y, p.y - b.pMax.y });
+    Float dz = std::max({ Float(0), b.pMin.z - p.z, p.z - b.pMax.z });
+    return dx * dx + dy * dy + dz * dz;
+}
+
+template <typename T>
+inline Float Distance(const Point3<T>& p, const aabb& b) {
+    return std::sqrt(DistanceSquared(p, b));
 }
 
 /*
@@ -183,5 +325,74 @@ public:
     // Bounds3 Public Data
     Point3<T> pMin, pMax;
 };
+
+template <typename T>
+Bounds3<T> Union(const Bounds3<T> &b, const Point3<T> &p) {
+    Bounds3<T> ret;
+    ret.pMin = Min(b.pMin, p);
+    ret.pMax = Max(b.pMax, p);
+    return ret;
+}
+
+template <typename T>
+Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+    Bounds3<T> ret;
+    ret.pMin = Min(b1.pMin, b2.pMin);
+    ret.pMax = Max(b1.pMax, b2.pMax);
+    return ret;
+}
+
+template <typename T>
+Bounds3<T> Intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+    // Important: assign to pMin/pMax directly and don't run the Bounds2()
+    // constructor, since it takes min/max of the points passed to it.  In
+    // turn, that breaks returning an invalid bound for the case where we
+    // intersect non-overlapping bounds (as we'd like to happen).
+    Bounds3<T> ret;
+    ret.pMin = Max(b1.pMin, b2.pMin);
+    ret.pMax = Min(b1.pMax, b2.pMax);
+    return ret;
+}
+
+template <typename T>
+bool Overlaps(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+    bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
+    bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
+    bool z = (b1.pMax.z >= b2.pMin.z) && (b1.pMin.z <= b2.pMax.z);
+    return (x && y && z);
+}
+
+template <typename T>
+bool Inside(const Point3<T> &p, const Bounds3<T> &b) {
+    return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
+            p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
+}
+
+template <typename T>
+bool InsideExclusive(const Point3<T> &p, const Bounds3<T> &b) {
+    return (p.x >= b.pMin.x && p.x < b.pMax.x && p.y >= b.pMin.y &&
+            p.y < b.pMax.y && p.z >= b.pMin.z && p.z < b.pMax.z);
+}
+
+template <typename T, typename U>
+inline Bounds3<T> Expand(const Bounds3<T> &b, U delta) {
+    return Bounds3<T>(b.pMin - Vector3<T>(delta, delta, delta),
+                      b.pMax + Vector3<T>(delta, delta, delta));
+}
+
+// Minimum squared distance from point to box; returns zero if point is
+// inside.
+template <typename T, typename U>
+inline Float DistanceSquared(const Point3<T> &p, const Bounds3<U> &b) {
+    Float dx = std::max({Float(0), b.pMin.x - p.x, p.x - b.pMax.x});
+    Float dy = std::max({Float(0), b.pMin.y - p.y, p.y - b.pMax.y});
+    Float dz = std::max({Float(0), b.pMin.z - p.z, p.z - b.pMax.z});
+    return dx * dx + dy * dy + dz * dz;
+}
+
+template <typename T, typename U>
+inline Float Distance(const Point3<T> &p, const Bounds3<U> &b) {
+    return std::sqrt(DistanceSquared(p, b));
+}
 */
 #endif

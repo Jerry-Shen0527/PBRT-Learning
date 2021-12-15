@@ -234,7 +234,7 @@ $$
 3. Declarations:
 
    ```c++
-   template <typename T> class Bounds3 {
+   class Transform{
        public:
        	Transform Translate(const Vector3f &delta) {
                Matrix4x4 m(1, 0, 0, delta.x,

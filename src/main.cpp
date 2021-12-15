@@ -21,8 +21,8 @@ using namespace std;
 #include "pdf.h"
 //#include "my_image.h"
 #include "spectrum.h"
-
 //#include "geometry.h"
+#include"transform.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -468,6 +468,7 @@ int main() {
     
     size_t part_samples = samples_per_pixel / use_num;
 
+    /*
     auto work = [=](int i, int j, size_t ps, color& pixel_color) {
 
         for (size_t s = 0; s < ps; ++s) {
@@ -476,24 +477,22 @@ int main() {
             ray r = cam.get_ray(u, v);
             pixel_color += ray_color(r, background, world, lights, max_depth);
         }
-    };
+    };*/
     
+    //core code
+    /*
     clock_t start, end;
     start = clock();
-
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
            
             //color pixel_color(0, 0, 0);
-            
             //for (size_t idt = 0; idt < use_num; idt++)
              //   workers[idt] = thread(work, i, j, part_samples, std::ref(pixel_color));
             //for (auto& worker : workers)
              //   worker.join();
-            
 
-            
             color pixel_color(0, 0, 0);
 #pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -517,8 +516,27 @@ int main() {
     }
     end = clock();
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
+    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";*/
 
-    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";
+    Point3f p1(1, 1, 1);
+    cout <<"p1: " << p1 << endl;
+    Vector3f vt(2.0, 3.0, 1.0);
+    pbrt::Transform T = pbrt::Translate(vt);
+    auto Rz = pbrt::RotateZ(90);
+    auto Tp = T(p1);
+    auto Rp = Rz(p1);
+    Vector3f ve(0.1, 0.1, 0.1);
+    auto pve = make_shared<Vector3f>(0.1, 0.1, 0.1);
+    //auto vv = *pve;
+    auto Tep = T(p1, pve.get());
+    auto Rep = Rz(p1, &ve);
+    cout << "TP: " << Tp << endl;
+    cout << "TeP: " << Tep << endl;
+    cout << "RP: " << Rp << endl;
+    cout << "ReP: " << Rep << endl;
+    auto RzT = Rz * T;
+    auto RzTp = RzT(p1);
+    cout << "PzTp: " << RzTp << endl;
     /*
     pbrt::SampledSpectrum::Init();
     color rgb1(0.5, 0.5, 0.5);

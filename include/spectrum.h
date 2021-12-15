@@ -46,7 +46,7 @@ namespace pbrt {
             return val;
     }
 
-
+    /*
     template <typename Predicate>
     int FindInterval(int size, const Predicate& pred) {
         int first = 0, len = size;
@@ -62,7 +62,7 @@ namespace pbrt {
         }
         return Clamp(first - 1, 0, size - 2);
     }
-
+    */
 
 
     static const int sampledLambdaStart = 400;
