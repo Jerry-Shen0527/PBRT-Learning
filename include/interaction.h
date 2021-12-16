@@ -19,7 +19,7 @@
 //#include "medium.h"
 //#include "material.h"
 
-//delete medium data  
+//delete medium data and ComputeScatteringFunctions 
 
 
 namespace pbrt {

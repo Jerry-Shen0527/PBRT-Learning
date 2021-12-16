@@ -36,6 +36,7 @@ class Shape {
         return Intersect(ray, nullptr, nullptr, testAlphaTexture);
     }
     virtual Float Area() const = 0;
+    //Sample
     /*
     // Sample a point on the surface of the shape and return the PDF with
     // respect to area on the surface.

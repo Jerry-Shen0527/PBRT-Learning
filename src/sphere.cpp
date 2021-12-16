@@ -110,7 +110,8 @@ namespace pbrt {
         if (!Quadratic(a, b, c, &t0, &t1)) return false;
 
         // Check quadric shape _t0_ and _t1_ for nearest intersection
-        if (t0.UpperBound() > ray.tMax || t1.LowerBound() <= 0) return false;
+        //if (t0.UpperBound() > ray.tMax || t1.LowerBound() <= 0) return false;
+        if (t0.UpperBound() > ray.tMax || t1.LowerBound() <= ray.tMin) return false;
         EFloat tShapeHit = t0;
         if (tShapeHit.LowerBound() <= 0) {
             tShapeHit = t1;
