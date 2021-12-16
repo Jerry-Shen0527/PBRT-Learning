@@ -112,6 +112,16 @@ Matrix4x4 Inverse(const Matrix4x4 &m) {
     return Matrix4x4(minv);
 }
 
+Transform Inverse(const Transform& t) {
+    return Transform(t.mInv, t.m);
+}
+Transform Transpose(const Transform& t) {
+    return Transform(Transpose(t.m), Transpose(t.mInv));
+}
+shared_ptr<Transform> Inverse(const shared_ptr<Transform>& t) {
+    return make_shared<Transform>(t->mInv, t->m);
+}
+
 // Transform Method Definitions
 void Transform::Print(FILE *f) const { m.Print(f); }
 

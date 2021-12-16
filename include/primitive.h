@@ -59,7 +59,7 @@ class GeometricPrimitive : public Primitive {
                                     MemoryArena &arena, TransportMode mode,
                                     bool allowMultipleLobes) const;*/
 
-  private:
+ private:
     // GeometricPrimitive Private Data
     std::shared_ptr<Shape> shape;
     std::shared_ptr<material> material_;

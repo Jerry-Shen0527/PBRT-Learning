@@ -22,7 +22,8 @@ using namespace std;
 //#include "my_image.h"
 #include "spectrum.h"
 //#include "geometry.h"
-#include"transform.h"
+#include "transform.h"
+#include "primitive.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -110,15 +111,36 @@ hittable_list random_scene() {
     return world;
 }
 
-hittable_list two_spheres() {
+vector<shared_ptr<pbrt::Primitive>> two_spheres() {
     hittable_list objects;
 
     auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    objects.add(make_shared<sphere>(Point3f(0, -10, 0), 10, red));
+    objects.add(make_shared<sphere>(Point3f(0, 10, 0), 10, red));
+    
+    //auto sphere_ptr=make_shared<pbrt::Sphere>
+    /**/
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
 
-    objects.add(make_shared<sphere>(Point3f(0, -10, 0), 10, make_shared<lambertian>(checker)));
-    objects.add(make_shared<sphere>(Point3f(0, 10, 0), 10, make_shared<lambertian>(checker)));
+    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor,wor2obj,false,10,10,10,2*pi);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
+    vector<shared_ptr<pbrt::Primitive>> primitives;
+    primitives.push_back(sphere_geo);
+    return primitives;
+}
 
-    return objects;
+
+shared_ptr< pbrt::GeometricPrimitive> test()
+{
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, 10, 10, 2 * pi);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, nullptr, nullptr);
+    return sphere_geo;
 }
 
 hittable_list two_perlin_spheres() {
@@ -177,6 +199,7 @@ hittable_list cornell_box() {
 
     auto glass = make_shared<dielectric>(1.5);
     objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
 
     return objects;
 }
@@ -244,7 +267,8 @@ hittable_list cornell_smoke() {
 
     objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
     objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
-    objects.add(make_shared<xz_rect>(113, 443, 127, 432, 554, light));
+    //objects.add(make_shared<xz_rect>(113, 443, 127, 432, 554, light));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
     objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
     objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
@@ -348,7 +372,10 @@ int main() {
     color background(0, 0, 0);
 
     bool Isspectrum = false;
-    switch (6) {
+
+    vector<shared_ptr<pbrt::Primitive>> primitives;
+    auto prims = primitives;
+    switch (2) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -359,7 +386,8 @@ int main() {
         break;
 
     case 2:
-        world = two_spheres();
+        //world = two_spheres();
+        primitives = two_spheres();
         background = color(0.70, 0.80, 1.00);
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
@@ -518,6 +546,22 @@ int main() {
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
     std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";*/
 
+    auto objwor = pbrt::Translate(Vector3f(0, 10, 0));
+    auto worobj = pbrt::Inverse(objwor);
+
+    //std::cout << objwor << endl;
+    //std::cout << worobj << endl;
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, 10, 10, 2 * pi);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
+    vector<shared_ptr<pbrt::Primitive>> tprimitives;
+    tprimitives.push_back(sphere_geo);
+    std::cout << primitives.size() << endl;
+    std::cout << primitives[0]->WorldBound().pMax << endl;
+    
+    /*
     Point3f p1(1, 1, 1);
     cout <<"p1: " << p1 << endl;
     Vector3f vt(2.0, 3.0, 1.0);
@@ -537,7 +581,7 @@ int main() {
     auto RzT = Rz * T;
     auto RzTp = RzT(p1);
     cout << "PzTp: " << RzTp << endl;
-    /*
+    
     pbrt::SampledSpectrum::Init();
     color rgb1(0.5, 0.5, 0.5);
     pbrt::Float rgb[3] = { 0.75, 0.25, 0.8 };

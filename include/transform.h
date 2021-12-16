@@ -112,12 +112,9 @@ class Transform {
     Transform(const Matrix4x4 &m) : m(m), mInv(Inverse(m)) {}
     Transform(const Matrix4x4 &m, const Matrix4x4 &mInv) : m(m), mInv(mInv) {}
     void Print(FILE *f) const;
-    friend Transform Inverse(const Transform &t) {
-        return Transform(t.mInv, t.m);
-    }
-    friend Transform Transpose(const Transform &t) {
-        return Transform(Transpose(t.m), Transpose(t.mInv));
-    }
+    friend Transform Inverse(const Transform& t);
+    friend Transform Transpose(const Transform& t);
+    friend shared_ptr<Transform> Inverse(const shared_ptr<Transform>& t);
     bool operator==(const Transform &t) const {
         return t.m == m && t.mInv == mInv;
     }

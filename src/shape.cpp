@@ -12,7 +12,7 @@ namespace pbrt {
 Shape::~Shape() {}
 
 //STAT_COUNTER("Scene/Shapes created", nShapesCreated);
-Shape::Shape(const Transform *ObjectToWorld, const Transform *WorldToObject,
+Shape::Shape(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
              bool reverseOrientation)
     : ObjectToWorld(ObjectToWorld),
       WorldToObject(WorldToObject),

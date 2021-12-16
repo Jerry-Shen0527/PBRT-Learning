@@ -40,7 +40,7 @@ namespace pbrt {
     class Sphere : public Shape {
     public:
         // Sphere Public Methods
-        Sphere(const Transform* ObjectToWorld, const Transform* WorldToObject,
+        Sphere(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
             bool reverseOrientation, Float radius, Float zMin, Float zMax,
             Float phiMax)
             : Shape(ObjectToWorld, WorldToObject, reverseOrientation),
