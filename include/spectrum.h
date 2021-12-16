@@ -26,14 +26,7 @@ namespace pbrt {
 
     //typedef double Float;
     inline Float Lerp(Float t, Float v1, Float v2) { return (1 - t) * v1 + t * v2; }
-    inline void CHECK_NE(Float a, Float b) {}
-    inline void DCHECK(bool b) {}
-    const Float Infinity = std::numeric_limits<Float>::infinity();
-
-    inline void CHECK_GT(Float a, Float b) {}
-    inline void CHECK_LT(Float a, Float b) {}
-    inline void CHECK(bool b) {}
-    inline void CHECK_GE(int a, int b) {}
+    
 
 
     template <typename T, typename U, typename V>

@@ -1,7 +1,7 @@
 #include "hittable.h"
 
 bool translate::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
-    ray moved_r(r.origin() - offset, r.direction(), r.time());
+    ray moved_r(r.origin() - offset, r.direction(), r.Time());
     if (!ptr->hit(moved_r, t_min, t_max, rec))
         return false;
 
@@ -64,7 +64,7 @@ bool rotate_y::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     direction[0] = cos_theta * r.direction()[0] - sin_theta * r.direction()[2];
     direction[2] = sin_theta * r.direction()[0] + cos_theta * r.direction()[2];
 
-    ray rotated_r(origin, direction, r.time());
+    ray rotated_r(origin, direction, r.Time());
 
     if (!ptr->hit(rotated_r, t_min, t_max, rec))
         return false;

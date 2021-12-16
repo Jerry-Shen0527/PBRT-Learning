@@ -51,7 +51,7 @@ color ray_color(
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
     mixture_pdf p(light_ptr, srec.pdf_ptr);
 
-    ray scattered = ray(rec.p, p.generate(), r.time());
+    ray scattered = ray(rec.p, p.generate(), r.Time());
     auto pdf_val = p.value(scattered.direction());
 
     return emitted

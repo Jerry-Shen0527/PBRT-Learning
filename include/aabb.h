@@ -33,17 +33,17 @@ public:
     }
     const Point3f& operator[](int i) const
     {
-        //DCHECK(i == 0 || i == 1);
+        DCHECK(i == 0 || i == 1);
         return (i == 0) ? pMin : pMax;
     }
     Point3f& operator[](int i)
     {
-        //DCHECK(i == 0 || i == 1);
+        DCHECK(i == 0 || i == 1);
         return (i == 0) ? pMin : pMax;
     }
 
     Point3f Corner(int corner) const {
-        //DCHECK(corner >= 0 && corner < 8);
+        DCHECK(corner >= 0 && corner < 8);
         return Point3f((*this)[(corner & 1)].x,
             (*this)[(corner & 2) ? 1 : 0].y,
             (*this)[(corner & 4) ? 1 : 0].z);
@@ -198,6 +198,8 @@ template <typename T>
 inline Float Distance(const Point3<T>& p, const aabb& b) {
     return std::sqrt(DistanceSquared(p, b));
 }
+
+using Bounds3f = aabb;
 
 /*
 template <typename T>

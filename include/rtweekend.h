@@ -26,8 +26,42 @@ const Float PiOver4 = 0.78539816339744830961;
 const Float Sqrt2 = 1.41421356237309504880;
 
 const Float infinity = std::numeric_limits<Float>::infinity();
+const Float Infinity = std::numeric_limits<Float>::infinity();
 const Float pi = 3.1415926535897932385;
 const Float MachineEpsilon = (std::numeric_limits<Float>::epsilon() * 0.5);
+
+
+//CHECK
+//#define PBRT_DEBUG
+#ifndef PBRT_DEBUG
+
+#define IN_RANGE(condition) (void)0
+#define ZERO_DENOMINATOR(t) (void)0
+#define CHECK_LE(t1,t2) (void)0
+#define CHECK_LT(t1,t2) (void)0
+#define CHECK_GE(t1,t2) (void)0
+#define CHECK_GT(t1,t2) (void)0
+#define CHECK_NE(t1,t2) (void)0
+#define CHECK_EQ(t1,t2) (void)0
+
+#define DCHECK(condition) (void)0
+#define CHECK(condition) (void)0
+
+#else
+#include <iostream>
+#define IN_RANGE(condition) if (!condition) std::cerr << "vec:Out of range" << std::endl;
+#define ZERO_DENOMINATOR(t) if (t<1e-8 && t>-1e-8) std::cerr << "denominator is near zero." << std::endl;
+#define CHECK_LE(t1,t2) if(t1 > t2) std::cerr<< "Not less/equal than" << std::endl;
+#define CHECK_LT(t1,t2) if(t1 >= t2) std::cerr<< "Not less than" << std::endl;
+#define CHECK_GE(t1,t2) if(t1 < t2) std::cerr<< "Not greater/equal than" <<std::endl;
+#define CHECK_GT(t1,t2) if(t1 <= t2) std::cerr<< "Not greater than" <<std::endl;
+#define CHECK_NE(t1,t2) if(t1 == t2) std::cerr<<t1<<" equals to "<<t2<<std::endl;
+#define CHECK_EQ(t1,t2) if(t1 != t2) std::cerr<<t1<<" not equals to "<<t2<<std::endl;
+
+#define DCHECK(condition) if (!condition) std::cerr << "condition if false" << std::endl;
+#define CHECK(condition) if (!condition) std::cerr << "condition if false" << std::endl;
+#endif // !PBRT_DEBUG
+
 
 
 //NaNs

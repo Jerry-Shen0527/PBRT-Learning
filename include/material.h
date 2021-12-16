@@ -78,7 +78,7 @@ public:
         const ray& r_in, const hit_record& rec, scatter_record& srec
     ) const override {
         Vector3f reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-        srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time());// r_in.time()
+        srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.Time());// r_in.time()
         srec.attenuation = albedo;
         srec.is_specular = true;
         srec.pdf_ptr = 0;
@@ -116,7 +116,7 @@ public:
         else
             direction = refract(unit_direction, rec.normal, refraction_ratio);
 
-        srec.specular_ray = ray(rec.p, direction, r_in.time());
+        srec.specular_ray = ray(rec.p, direction, r_in.Time());
 
         return true;
     }
@@ -169,7 +169,7 @@ public:
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
     ) const {//cancel override
-        scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
+        scattered = ray(rec.p, random_in_unit_sphere(), r_in.Time());
         attenuation = albedo->value(rec.u, rec.v, rec.p);
         return true;
     }

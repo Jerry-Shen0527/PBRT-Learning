@@ -239,8 +239,8 @@ inline Normal3<T> Transform::operator()(const Normal3<T> &n) const {
 
 inline ray Transform::operator()(const ray &r) const {
     Vector3f oError;
-    Point3f o = (*this)(r.orig, &oError);
-    Vector3f d = (*this)(r.dir);
+    Point3f o = (*this)(r.o, &oError);
+    Vector3f d = (*this)(r.d);
     // Offset ray origin to edge of error bounds and compute _tMax_
     Float lengthSquared = d.LengthSquared();
     //Float tMax = r.tMax;
@@ -250,14 +250,14 @@ inline ray Transform::operator()(const ray &r) const {
         //tMax -= dt;
     }
     //return Ray(o, d, tMax, r.time, r.medium);
-    return ray(o, d, r.tm);
+    return ray(o, d, r.time);
 }
 
 inline RayDifferential Transform::operator()(const RayDifferential &r) const {
     ray tr = (*this)(ray(r));
     //RayDifferential ret(tr.orig, tr.dir, tr.tMax, tr.time, tr.medium);
     Float tMax = infinity;
-    RayDifferential ret(tr.orig, tr.dir, tMax, tr.tm, nullptr);
+    RayDifferential ret(tr.o, tr.d, 0.f, tMax, tr.time);
     ret.hasDifferentials = r.hasDifferentials;
     ret.rxOrigin = (*this)(r.rxOrigin);
     ret.ryOrigin = (*this)(r.ryOrigin);
@@ -375,8 +375,8 @@ inline Vector3<T> Transform::operator()(const Vector3<T> &v,
 
 inline ray Transform::operator()(const ray &r, Vector3f *oError,
                                  Vector3f *dError) const {
-    Point3f o = (*this)(r.orig, oError);
-    Vector3f d = (*this)(r.dir, dError);
+    Point3f o = (*this)(r.o, oError);
+    Vector3f d = (*this)(r.d, dError);
     //Float tMax = r.tMax;
     Float lengthSquared = d.LengthSquared();
     if (lengthSquared > 0) {
@@ -385,14 +385,14 @@ inline ray Transform::operator()(const ray &r, Vector3f *oError,
         //        tMax -= dt;
     }
     //return Ray(o, d, tMax, r.time, r.medium);
-    return ray(o, d, r.tm);
+    return ray(o, d, r.time);
 }
 
 inline ray Transform::operator()(const ray &r, const Vector3f &oErrorIn,
                                  const Vector3f &dErrorIn, Vector3f *oErrorOut,
                                  Vector3f *dErrorOut) const {
-    Point3f o = (*this)(r.orig, oErrorIn, oErrorOut);
-    Vector3f d = (*this)(r.dir, dErrorIn, dErrorOut);
+    Point3f o = (*this)(r.o, oErrorIn, oErrorOut);
+    Vector3f d = (*this)(r.d, dErrorIn, dErrorOut);
     //Float tMax = r.tMax;
     Float lengthSquared = d.LengthSquared();
     if (lengthSquared > 0) {
@@ -401,7 +401,7 @@ inline ray Transform::operator()(const ray &r, const Vector3f &oErrorIn,
         //        tMax -= dt;
     }
     //return Ray(o, d, tMax, r.time, r.medium);
-    return ray(o, d, r.tm);
+    return ray(o, d, r.time);
 }
 
 // AnimatedTransform Declarations

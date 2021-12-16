@@ -4,9 +4,9 @@
 
 // core/transform.cpp*
 #include "transform.h"
-//#include "interaction.h"
+#include "interaction.h"
 #include<assert.h>
-//delete interaction
+
 
 namespace pbrt {
 
@@ -257,7 +257,7 @@ bool Transform::SwapsHandedness() const {
     return det < 0;
 }
 
-/*
+/**/
 SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     SurfaceInteraction ret;
     // Transform _p_ and _pError_ in _SurfaceInteraction_
@@ -268,7 +268,7 @@ SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     ret.n = Normalize(t(si.n));
     ret.wo = Normalize(t(si.wo));
     ret.time = si.time;
-    ret.mediumInterface = si.mediumInterface;
+    //ret.mediumInterface = si.mediumInterface;
     ret.uv = si.uv;
     ret.shape = si.shape;
     ret.dpdu = t(si.dpdu);
@@ -286,15 +286,15 @@ SurfaceInteraction Transform::operator()(const SurfaceInteraction &si) const {
     ret.dvdy = si.dvdy;
     ret.dpdx = t(si.dpdx);
     ret.dpdy = t(si.dpdy);
-    ret.bsdf = si.bsdf;
-    ret.bssrdf = si.bssrdf;
+    //ret.bsdf = si.bsdf;
+    //ret.bssrdf = si.bssrdf;
     ret.primitive = si.primitive;
     //    ret.n = Faceforward(ret.n, ret.shading.n);
     ret.shading.n = Faceforward(ret.shading.n, ret.n);
     ret.faceIndex = si.faceIndex;
     return ret;
 }
-*/
+
 Transform Orthographic(Float zNear, Float zFar) {
     return Scale(1, 1, 1 / (zFar - zNear)) * Translate(Vector3f(0, 0, -zNear));
 }
@@ -1172,25 +1172,25 @@ void AnimatedTransform::Interpolate(Float time, Transform *t) const {
 }
 
 ray AnimatedTransform::operator()(const ray &r) const {
-    if (!actuallyAnimated || r.tm <= startTime)
+    if (!actuallyAnimated || r.time <= startTime)
         return (*startTransform)(r);
-    else if (r.tm >= endTime)
+    else if (r.time >= endTime)
         return (*endTransform)(r);
     else {
         Transform t;
-        Interpolate(r.tm, &t);
+        Interpolate(r.time, &t);
         return t(r);
     }
 }
 
 RayDifferential AnimatedTransform::operator()(const RayDifferential &r) const {
-    if (!actuallyAnimated || r.tm <= startTime)
+    if (!actuallyAnimated || r.time <= startTime)
         return (*startTransform)(r);
-    else if (r.tm >= endTime)
+    else if (r.time >= endTime)
         return (*endTransform)(r);
     else {
         Transform t;
-        Interpolate(r.tm, &t);
+        Interpolate(r.time, &t);
         return t(r);
     }
 }

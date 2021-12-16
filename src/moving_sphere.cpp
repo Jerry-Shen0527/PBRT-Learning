@@ -5,7 +5,7 @@ Point3f moving_sphere::center(double time) const {
 }
 
 bool moving_sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
-    Vector3f oc = r.origin() - center(r.time());
+    Vector3f oc = r.origin() - center(r.Time());
     auto a = r.direction().LengthSquared();
     auto half_b = Dot(oc, r.direction());
     auto c = oc.LengthSquared() - radius * radius;
@@ -24,7 +24,7 @@ bool moving_sphere::hit(const ray& r, double t_min, double t_max, hit_record& re
 
     rec.t = root;
     rec.p = r.at(rec.t);
-    auto outward_normal = Normal3f((rec.p - center(r.time())) / radius);
+    auto outward_normal = Normal3f((rec.p - center(r.Time())) / radius);
     rec.set_face_normal(r, outward_normal);
     rec.mat_ptr = mat_ptr;
 
