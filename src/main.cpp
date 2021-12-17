@@ -382,10 +382,10 @@ hittable_list cornell_box_primitive(vector<shared_ptr<pbrt::Primitive>>& primiti
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(190, 90, 190)));
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto Sph1_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 90, -90, 90, 360);
-    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, glass, nullptr);
+    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, red, nullptr);
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
-    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
-    primitives.push_back(Sph1_geo);
+    objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, red));
+    //primitives.push_back(Sph1_geo);
     return objects;
 }
 
