@@ -584,7 +584,7 @@ int main() {
 
     shared_ptr<hittable_list> lights = make_shared<hittable_list>();
     lights->add(make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>()));
-    lights->add(make_shared<sphere>(Point3f(190, 90, 190), 90, shared_ptr<material>()));
+    //lights->add(make_shared<sphere>(Point3f(190, 90, 190), 90, shared_ptr<material>()));
     
 
     // Camera
