@@ -75,6 +75,7 @@ GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
     : shape(shape),
     material_(material),
     areaLight(areaLight){
+    //std::cout << "GeometricPrimitive::GeometricPrimitive material_: " << material_ << std::endl;
     //primitiveMemory += sizeof(*this);
 }
 
@@ -90,6 +91,9 @@ bool GeometricPrimitive::Intersect(const Ray &r,
     if (!shape->Intersect(r, &tHit, isect)) return false;
     r.tMax = tHit;
     isect->primitive = this;
+    //add material
+    //std::cout << "GeometricPrimitive::Intersect material_: " << material_ << std::endl;
+    isect->mat_ptr = material_;
     CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
     // Initialize _SurfaceInteraction::mediumInterface_ after _Shape_
     // intersection    

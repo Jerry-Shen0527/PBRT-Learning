@@ -61,6 +61,133 @@ color ray_color(
 
 }
 
+shared_ptr< pbrt::GeometricPrimitive> test();
+color ray_color_new(
+    const ray& r, const color& background, const hittable& world,
+    const vector<shared_ptr<pbrt::Primitive>>& primitives,
+    const shared_ptr<hittable>& lights, int depth
+) {
+    hit_record rec;
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return color(0, 0, 0);
+
+    // If the ray hits nothing, return the background color.
+    bool hit_prim = false;
+    pbrt::SurfaceInteraction surface_rec;
+    auto prim = test();
+    if (prim->IntersectP(r))
+    {
+        hit_prim = true;
+        prim->Intersect(r, &surface_rec);
+
+    }
+    if (!world.hit(r, 0.001, r.tMax, rec))
+        if (!hit_prim)
+            return background;
+        else
+        {
+                rec.p = surface_rec.p;
+                rec.normal = surface_rec.n;
+                rec.t = r.tMax;
+                rec.mat_ptr = surface_rec.mat_ptr;
+                rec.u = surface_rec.uv.x;
+                rec.v = surface_rec.uv.y;
+                rec.set_face_normal(r, rec.normal);
+        }
+    
+
+    scatter_record srec;
+    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+    if (!rec.mat_ptr->scatter(r, rec, srec))
+        return emitted;
+
+    if (srec.is_specular) {
+        return srec.attenuation
+            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
+    }
+
+    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+    mixture_pdf p(light_ptr, srec.pdf_ptr);
+
+    ray scattered = ray(rec.p, p.generate(), r.Time());
+    auto pdf_val = p.value(scattered.direction());
+
+    return emitted
+        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
+
+}
+
+color ray_color_new1(
+    const ray& r, const color& background, const hittable& world,
+    const vector<shared_ptr<pbrt::Primitive>>& primitives,
+    const shared_ptr<hittable>& lights, int depth
+) {
+    hit_record rec;
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return color(0, 0, 0);
+
+    //test hit the primitives
+    bool hit_prim = false;
+    pbrt::SurfaceInteraction surface_rec;
+    for (const auto& prim : primitives) {
+        if (prim->IntersectP(r))
+        {
+            hit_prim = true;
+            prim->Intersect(r, &surface_rec);
+        }
+    }
+
+    // If the ray hits nothing, return the background color.
+    //if (!world.hit(r, 0.001, infinity, rec))
+        //return background;
+
+    //test hit the world
+    if (!world.hit(r, 0.001, r.tMax, rec))
+    {   // If the ray hits nothing, return the background color.
+        if(!hit_prim)
+            return background;
+        //hit the prims
+        //scatter_record prim_srec;
+        //make rec from surface_rec
+        //hit_record p_rec;
+        /**/
+        rec.p = surface_rec.p;
+        rec.normal = surface_rec.n;
+        rec.t = r.tMax;
+        rec.mat_ptr = surface_rec.mat_ptr;
+        rec.u = surface_rec.uv.x;
+        rec.v = surface_rec.uv.y;
+        rec.set_face_normal(r, rec.normal);
+                
+    }
+    //hit the world or prims
+    scatter_record srec;
+    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+    if (!rec.mat_ptr->scatter(r, rec, srec))
+        return emitted;
+
+    if (srec.is_specular) {
+        return srec.attenuation
+            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
+    }
+
+    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+    mixture_pdf p(light_ptr, srec.pdf_ptr);
+
+    ray scattered = ray(rec.p, p.generate(), r.Time());
+    auto pdf_val = p.value(scattered.direction());
+
+    return emitted
+        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
+
+}
+
 hittable_list random_scene() {
     hittable_list world;
 
@@ -111,7 +238,7 @@ hittable_list random_scene() {
     return world;
 }
 
-vector<shared_ptr<pbrt::Primitive>> two_spheres() {
+hittable_list two_spheres(vector<shared_ptr<pbrt::Primitive>>& primitives) {
     hittable_list objects;
 
     auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
@@ -119,27 +246,27 @@ vector<shared_ptr<pbrt::Primitive>> two_spheres() {
     auto white = make_shared<lambertian>(color(.73, .73, .73));
     auto green = make_shared<lambertian>(color(.12, .45, .15));
     objects.add(make_shared<sphere>(Point3f(0, -10, 0), 10, red));
-    objects.add(make_shared<sphere>(Point3f(0, 10, 0), 10, red));
+    //objects.add(make_shared<sphere>(Point3f(0, 10, 0), 10, red));
     
     //auto sphere_ptr=make_shared<pbrt::Sphere>
     /**/
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
     auto wor2obj = pbrt::Inverse(obj2wor);
-
-    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor,wor2obj,false,10,10,10,2*pi);
+    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, -10, 10, 360);
     auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
-    vector<shared_ptr<pbrt::Primitive>> primitives;
+    
     primitives.push_back(sphere_geo);
-    return primitives;
+    return objects;
 }
 
 
 shared_ptr< pbrt::GeometricPrimitive> test()
 {
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
     auto wor2obj = pbrt::Inverse(obj2wor);
-    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, 10, 10, 2 * pi);
-    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, nullptr, nullptr);
+    auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, -10, 10, 360);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
     return sphere_geo;
 }
 
@@ -374,7 +501,7 @@ int main() {
     bool Isspectrum = false;
 
     vector<shared_ptr<pbrt::Primitive>> primitives;
-    auto prims = primitives;
+
     switch (2) {
     case 1:
         world = random_scene();
@@ -387,7 +514,7 @@ int main() {
 
     case 2:
         //world = two_spheres();
-        primitives = two_spheres();
+        world = two_spheres(primitives);
         background = color(0.70, 0.80, 1.00);
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
@@ -508,7 +635,7 @@ int main() {
     };*/
     
     //core code
-    /*
+    
     clock_t start, end;
     start = clock();
     for (int j = image_height - 1; j >= 0; --j) {
@@ -527,7 +654,8 @@ int main() {
                    auto u = (i + random_Float()) / (image_width - 1);
                 auto v = (j + random_Float()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, background, world, lights, max_depth);
+                //pixel_color += ray_color(r, background, world, lights, max_depth);
+                pixel_color += ray_color_new1(r, background, world, primitives, lights, max_depth);
             }
            
             if (Isspectrum)
@@ -540,17 +668,49 @@ int main() {
             }
             else
                 write_color(std::cout, pixel_color, samples_per_pixel);
+
         }
     }
     end = clock();
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";*/
+    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";/**/
 
-    auto objwor = pbrt::Translate(Vector3f(0, 10, 0));
-    auto worobj = pbrt::Inverse(objwor);
+    /*
+    auto te = test();
+    std::cout << te->WorldBound().pMin << endl;
+    std::cout << te->WorldBound().pMax << endl;
+    //std::cout << te->shape->Area() << endl;
 
-    //std::cout << objwor << endl;
-    //std::cout << worobj << endl;
+    Ray r1(Point3f(0.f, -10.f, 0.f), Vector3f(0, 10, 0));
+    std::cout<<"tMax: " << r1.tMax << endl;
+    bool hit_prim = false;
+    pbrt::SurfaceInteraction surface_rec;
+    
+    for (const auto& prim : primitives) {
+        if (prim->IntersectP(r1))
+        {
+            hit_prim = true;
+            prim->Intersect(r1, &surface_rec);
+        }
+    }
+    if (te->IntersectP(r1))
+    {
+        hit_prim = true;
+        te->Intersect(r1, &surface_rec);
+    }
+    if (hit_prim)
+        cout << "hit prim: "<<surface_rec.p << endl;
+    else
+        cout << "not" << endl;
+    std::cout << "tMax: " << r1.tMax << endl;
+
+    if(surface_rec.mat_ptr==nullptr)
+        std::cout << "surface_rec.mat_ptr == nullptr" << endl;
+    else
+        std::cout << "surface_rec.mat_ptr != nullptr" << endl;
+
+
+    
     auto red = make_shared<lambertian>(color(.65, .05, .05));
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
     auto wor2obj = pbrt::Inverse(obj2wor);
@@ -561,7 +721,7 @@ int main() {
     std::cout << primitives.size() << endl;
     std::cout << primitives[0]->WorldBound().pMax << endl;
     
-    /*
+    
     Point3f p1(1, 1, 1);
     cout <<"p1: " << p1 << endl;
     Vector3f vt(2.0, 3.0, 1.0);
@@ -584,11 +744,11 @@ int main() {
     
     pbrt::SampledSpectrum::Init();
     color rgb1(0.5, 0.5, 0.5);
-    pbrt::Float rgb[3] = { 0.75, 0.25, 0.8 };
-    pbrt::Float torgb[3] = {};
-    pbrt::Float xyz[3] = {};
-    pbrt::Float xyztorgb[3] = {};
-    pbrt::Float rgbtoxyz[3] = {};
+    Float rgb[3] = { 0.75, 0.25, 0.8 };
+    Float torgb[3] = {};
+    Float xyz[3] = {};
+    Float xyztorgb[3] = {};
+    Float rgbtoxyz[3] = {};
     pbrt::SampledSpectrum sam = pbrt::SampledSpectrum::FromRGB(rgb, pbrt::SpectrumType::Reflectance);
    
     sam.ToXYZ(xyz);

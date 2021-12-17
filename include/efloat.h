@@ -170,7 +170,8 @@ class EFloat {
          //                  ef.v, ef.v, ef.low, ef.high);
         os << "v=" << ef.v << " (" << ef.v << ") - [" << ef.low << ", " << ef.high << "]";
 #ifndef NDEBUG
-        os << StringPrintf(", precise=%.30Lf", ef.vPrecise);
+        //os << StringPrintf(", precise=%.30Lf", ef.vPrecise);
+        os << ", precise=" << ef.vPrecise;
 #endif // !NDEBUG
         return os;
     }
