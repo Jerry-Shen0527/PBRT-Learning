@@ -61,66 +61,8 @@ color ray_color(
 
 }
 
-shared_ptr< pbrt::GeometricPrimitive> test();
+
 color ray_color_new(
-    const ray& r, const color& background, const hittable& world,
-    const vector<shared_ptr<pbrt::Primitive>>& primitives,
-    const shared_ptr<hittable>& lights, int depth
-) {
-    hit_record rec;
-
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return color(0, 0, 0);
-
-    // If the ray hits nothing, return the background color.
-    bool hit_prim = false;
-    pbrt::SurfaceInteraction surface_rec;
-    auto prim = test();
-    if (prim->IntersectP(r))
-    {
-        hit_prim = true;
-        prim->Intersect(r, &surface_rec);
-
-    }
-    if (!world.hit(r, 0.001, r.tMax, rec))
-        if (!hit_prim)
-            return background;
-        else
-        {
-                rec.p = surface_rec.p;
-                rec.normal = surface_rec.n;
-                rec.t = r.tMax;
-                rec.mat_ptr = surface_rec.mat_ptr;
-                rec.u = surface_rec.uv.x;
-                rec.v = surface_rec.uv.y;
-                rec.set_face_normal(r, rec.normal);
-        }
-    
-
-    scatter_record srec;
-    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
-    if (!rec.mat_ptr->scatter(r, rec, srec))
-        return emitted;
-
-    if (srec.is_specular) {
-        return srec.attenuation
-            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
-    }
-
-    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
-    mixture_pdf p(light_ptr, srec.pdf_ptr);
-
-    ray scattered = ray(rec.p, p.generate(), r.Time());
-    auto pdf_val = p.value(scattered.direction());
-
-    return emitted
-        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
-
-}
-
-color ray_color_new1(
     const ray& r, const color& background, const hittable& world,
     const vector<shared_ptr<pbrt::Primitive>>& primitives,
     const shared_ptr<hittable>& lights, int depth
@@ -173,7 +115,7 @@ color ray_color_new1(
 
     if (srec.is_specular) {
         return srec.attenuation
-            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
+            * ray_color_new(srec.specular_ray, background, world, primitives, lights, depth - 1);
     }
 
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
@@ -184,7 +126,7 @@ color ray_color_new1(
 
     return emitted
         + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color(scattered, background, world, lights, depth - 1) / pdf_val;
+        * ray_color_new(scattered, background, world, primitives, lights, depth - 1) / pdf_val;
 
 }
 
@@ -414,6 +356,39 @@ hittable_list cornell_smoke() {
     return objects;
 }
 
+hittable_list cornell_box_primitive(vector<shared_ptr<pbrt::Primitive>>& primitives) {
+    hittable_list objects;
+
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), aluminum);
+    shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
+    box1 = make_shared<rotate_y>(box1, 15);
+    box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
+    objects.add(box1);
+
+    auto glass = make_shared<dielectric>(1.5);
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(190, 90, 190)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto Sph1_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 90, -90, 90, 360);
+    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, glass, nullptr);
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
+    primitives.push_back(Sph1_geo);
+    return objects;
+}
+
 hittable_list final_scene() {
     hittable_list boxes1;
     auto ground = make_shared<lambertian>(color(0.48, 0.83, 0.53));
@@ -502,7 +477,7 @@ int main() {
 
     vector<shared_ptr<pbrt::Primitive>> primitives;
 
-    switch (2) {
+    switch (10) {
     case 1:
         world = random_scene();
         background = color(0.70, 0.80, 1.00);
@@ -592,6 +567,18 @@ int main() {
         vfov = 40.0;
         Isspectrum = true;
         break;
+
+    case 10:
+        world = cornell_box_primitive(primitives);
+        aspect_ratio = 1.0;
+        image_width = 600;
+        samples_per_pixel = 100;//200
+        background = color(0, 0, 0);
+        lookfrom = Point3f(278, 278, -800);
+        lookat = Point3f(278, 278, 0);
+        vfov = 40.0;
+        Isspectrum = true;
+        break;
     }
 
 
@@ -655,7 +642,7 @@ int main() {
                 auto v = (j + random_Float()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 //pixel_color += ray_color(r, background, world, lights, max_depth);
-                pixel_color += ray_color_new1(r, background, world, primitives, lights, max_depth);
+                pixel_color += ray_color_new(r, background, world, primitives, lights, max_depth);
             }
            
             if (Isspectrum)
