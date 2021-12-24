@@ -484,10 +484,10 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
 
     //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
     //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), aluminum);
-    shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
-    box1 = make_shared<rotate_y>(box1, 15);
-    box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
-    objects.add(box1);
+    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
+    //box1 = make_shared<rotate_y>(box1, 15);
+    //box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
+    //objects.add(box1);
 
     //auto glass = make_shared<dielectric>(1.5);
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
@@ -497,8 +497,8 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
     auto ident = make_shared<pbrt::Transform>();
     //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
     //auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(220,0,300))*pbrt::RotateY(180));
-    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(80,100,120))*
-        pbrt::Rotate(-5, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
+        pbrt::Rotate(25, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
         pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));
     //cout << "obj2wor: " << *obj2wor << endl;
     auto wor2obj = pbrt::Inverse(obj2wor);
