@@ -8,6 +8,9 @@
 #include "efloat.h"
 //#include "ext/rply.h"
 #include <array>
+#include<fstream>
+#include<sstream>
+#include<iostream>
 
 namespace pbrt {
 
@@ -62,6 +65,108 @@ TriangleMesh::TriangleMesh(
         faceIndices = std::vector<int>(fIndices, fIndices + nTriangles);
 }
 
+TriangleMesh::TriangleMesh(const Transform& ObjectToWorld, const char* load_path)
+{
+    /*std::cout << "TriangleMesh::TriangleMesh(const Transform& ObjectToWorld, const char* load_path): " 
+        << ObjectToWorld << std::endl;*/
+    int vnNum = 0, vtNum = 0, vNum = 0, fNum = 0;
+    std::ifstream objfile;
+    objfile.open(load_path, std::ios::in);
+    if (!objfile.is_open())
+        std::cerr << "Failed to load: " << load_path << std::endl;
+    //auto objfile1 = objfile;
+    std::string sline;
+    std::string sle;
+    while (getline(objfile, sline)) {//从指定文件逐行读取
+        if (sline[0] == 'v') {
+            if (sline[1] == 'n') {//vn
+                vnNum++;
+            }
+            else if (sline[1] == 't') {//vt
+                vtNum++;
+            }
+            else {//v
+                vNum++;
+            }
+        }
+        if (sline[0] == 'f') {
+            fNum++;
+        }
+    }
+    objfile.close();
+
+    if (vNum == 0 || fNum == 0)
+    {
+        std::cerr << "vNum == 0 || fNum == 0 in TriMesh" << std::endl;
+        return;
+    }
+    std::ifstream objfile1;
+    objfile1.open(load_path, std::ios::in);
+    if (!objfile1.is_open())
+        std::cerr << "Failed to load: " << load_path << std::endl;
+    nTriangles = fNum;
+    nVertices = vNum;
+   
+    vertexIndices.resize(3 * nTriangles);
+    p.reset(new Point3f[nVertices]);
+    if (vtNum != 0)
+        uv.reset(new Point2f[nVertices]);
+    else
+        uv = nullptr;
+    if (vnNum != 0)
+        n.reset(new Normal3f[nVertices]);
+    else
+        n = nullptr;
+    //s.reset(new Vector3f[nVertices]);
+    int nn = 0, nt = 0, nv = 0, nInd = 0;
+    //<---no transform as no pos/uv/normal--index--->
+    while (getline(objfile1, sline)) {
+        //num++;
+        std::istringstream ins(sline);
+        if (sline[0] == 'v') {
+            if (sline[1] == 'n' && vnNum != 0) {//vn
+                //vnNum++;                
+                ins >> sle >> n[nn].x >> n[nn].y >> n[nn].z;
+                n[nn] = ObjectToWorld(n[nn]);
+                nn++;
+                //cout << sle << x << endl;
+            }
+            else if (sline[1] == 't' && vtNum != 0) {//vt
+                ///vtNum++;
+                ins >> sle >> uv[nt].x >> uv[nt].y;
+                //inverse
+                //uv[nt].y = 1 - un[nt].y;
+                nt++;
+            }
+            else {//v                
+                ins >> sle >> p[nv].x >> p[nv].y >> p[nv].z;
+                //std::cout << "pnv: " << p[nv] << std::endl;
+                p[nv] = ObjectToWorld(p[nv]);
+                //std::cout << "obj(pnv): " << p[nv] << std::endl;
+                nv++;
+                //vNum++;
+            }
+        }
+        //simply f index
+        if (sline[0] == 'f') {
+            ins >> sle;
+            ins >> vertexIndices[nInd];
+            vertexIndices[nInd]--;
+            nInd++;
+            ins >> vertexIndices[nInd];
+            vertexIndices[nInd]--;
+            nInd++;
+            ins >> vertexIndices[nInd];
+            vertexIndices[nInd]--;
+            nInd++;
+
+        }
+    }
+    //cout << "num: " << num << endl;
+    objfile1.close();
+
+}
+
 std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
     bool reverseOrientation, int nTriangles, const int *vertexIndices,
@@ -78,6 +183,21 @@ std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     for (int i = 0; i < nTriangles; ++i)
         tris.push_back(std::make_shared<Triangle>(ObjectToWorld, WorldToObject,
                                                   reverseOrientation, mesh, i));
+    return tris;
+}
+
+std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+    shared_ptr<Transform> o2w, shared_ptr<Transform> w2o, bool reverseOrientation,
+    const char* load_path,
+    const int* faceIndices)
+{
+    std::shared_ptr<TriangleMesh> mesh = std::make_shared<TriangleMesh>(*o2w, load_path);
+    std::vector<std::shared_ptr<Shape>> tris;
+    int nTriangles = mesh->nTriangles;
+    tris.reserve(nTriangles);
+    for (int i = 0; i < nTriangles; ++i)
+        tris.push_back(std::make_shared<Triangle>(o2w, w2o,
+            reverseOrientation, mesh, i));
     return tris;
 }
 

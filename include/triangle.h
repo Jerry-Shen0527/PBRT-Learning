@@ -11,6 +11,7 @@
 #include "shape.h"
 //#include "stats.h"
 #include <map>
+#include<string>
 
 namespace pbrt {
 
@@ -20,6 +21,7 @@ namespace pbrt {
 // triangle meshes transform the shape into world space
 struct TriangleMesh {
     // TriangleMesh Public Methods
+    //vertexIndices start by 0;
     TriangleMesh(const Transform &ObjectToWorld, int nTriangles,
                  const int *vertexIndices, int nVertices, const Point3f *P,
                  const Vector3f *S, const Normal3f *N, const Point2f *uv,
@@ -27,8 +29,13 @@ struct TriangleMesh {
                  //const std::shared_ptr<Texture<Float>> &shadowAlphaMask,
                  const int *faceIndices);
 
+    //no faceIndices
+    //load_path start by 1 --> vertexIndices start by 0;
+    TriangleMesh(const Transform& ObjectToWorld, const char* load_path);
+    
     // TriangleMesh Data
-    const int nTriangles, nVertices;
+    //const int nTriangles, nVertices;
+    int nTriangles, nVertices;
     std::vector<int> vertexIndices;
     std::unique_ptr<Point3f[]> p;
     std::unique_ptr<Normal3f[]> n;
@@ -91,6 +98,11 @@ std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
     //const std::shared_ptr<Texture<Float>> &alphaTexture,
     //const std::shared_ptr<Texture<Float>> &shadowAlphaTexture,
     const int *faceIndices = nullptr);
+
+std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+    shared_ptr<Transform> o2w, shared_ptr<Transform> w2o, bool reverseOrientation,
+    const char* load_path,
+    const int* faceIndices = nullptr);
 //std::vector<std::shared_ptr<Shape>> CreateTriangleMeshShape(
   //  const Transform *o2w, const Transform *w2o, bool reverseOrientation,
     //const ParamSet &params,
