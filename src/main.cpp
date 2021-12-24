@@ -495,8 +495,11 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
 
     char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/tri.obj";
     auto ident = make_shared<pbrt::Transform>();
+    //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
     //auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(220,0,300))*pbrt::RotateY(180));
-    auto obj2wor = make_shared<pbrt::Transform>(pbrt::RotateX(30) * pbrt::Translate(Vector3f(220, 50, 300)) * pbrt::RotateY(180));
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(80,100,120))*
+        pbrt::Rotate(-5, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
+        pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));
     //cout << "obj2wor: " << *obj2wor << endl;
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto trimesh = pbrt::CreateTriangleMesh(obj2wor, wor2obj, false, loadpath);
@@ -753,7 +756,7 @@ int main() {
     };*/
     
     //core code
-    /*
+    
     clock_t start, end;
     start = clock();
     for (int j = image_height - 1; j >= 0; --j) {
@@ -791,8 +794,8 @@ int main() {
     }
     end = clock();
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";*/
-
+    std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";/**/
+    /*
     Point3f p(1, 0, 0);
     cout << "p: "<< p << endl;
     if (pbrt::RotateZ(90) == pbrt::Rotate(90, Vector3f(0, 0, 2.6)))
@@ -802,7 +805,7 @@ int main() {
     
     cout << "pbrt::RotateZ(90)*p: " << pbrt::RotateZ(90)(p) << endl;
     cout << "pbrt::Rotate(90,Point3f(-1,0,0),Vector3f(0,0,1))*p: " << pbrt::Rotate(90,Point3f(0,1,0),Vector3f(0,0,1))(p) << endl;
-    /*
+    
     char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/tri.obj";
     //pbrt::TriangleMesh triMesh(loadpath);
     //cout << triMesh.nVertices<<" " << triMesh.nTriangles << " " << triMesh.vertexIndices.size() << endl;
