@@ -102,15 +102,15 @@ color ray_color_new(
         //scatter_record prim_srec;
         //make rec from surface_rec
         //hit_record p_rec;
-        /*
+        
         rec.p = surface_rec.p;
         rec.normal = surface_rec.n;
         rec.t = r.tMax;
         rec.mat_ptr = surface_rec.mat_ptr;
         rec.u = surface_rec.uv.x;
         rec.v = surface_rec.uv.y;
-        rec.set_face_normal(r, rec.normal);*/
-        return color(.3, .3, .3);
+        rec.set_face_normal(r, rec.normal);/**/
+        //return color(.3, .3, .3);
                 
     }
     //hit the world or prims
@@ -504,7 +504,7 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto trimesh = pbrt::CreateTriangleMesh(obj2wor, wor2obj, false, loadpath);
     auto trimesh_shape = make_shared<pbrt::Shape_list>(trimesh, ident, ident);//(trimesh,nullptr,nullptr,false)
-    auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, red, nullptr);
+    auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
     primitives.push_back(trimesh_geo);
     return objects;
 }
