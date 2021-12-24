@@ -67,6 +67,40 @@ class GeometricPrimitive : public Primitive {
     //MediumInterface mediumInterface;
 };
 
+//geo default (enum)
+class PrimitiveLists :public Primitive {
+public:
+    PrimitiveLists(){}
+    void add(const std::shared_ptr<Shape>& shape,
+        const std::shared_ptr<material>& material,
+        const std::shared_ptr<AreaLight>& areaLight) {
+        primitives.push_back(make_shared<GeometricPrimitive>(shape, material, areaLight));
+    }
+    void add(const std::vector<std::shared_ptr<Shape>>& shapes,
+        const std::shared_ptr<material>& material,
+        const std::shared_ptr<AreaLight>& areaLight) {
+        for (auto& shape : shapes)
+            primitives.push_back(make_shared<GeometricPrimitive>(shape, material, areaLight));
+    }
+    void add(const std::shared_ptr<Primitive>& prim) {
+        primitives.push_back(prim);
+    }
+    void add(const std::vector<std::shared_ptr<Primitive>>& prims) {
+        for (auto& prim : prims)
+            primitives.push_back(prim);
+    }
+
+    Bounds3f WorldBound() const;
+    bool Intersect(const Ray& r, SurfaceInteraction* isect) const;
+    bool IntersectP(const Ray& r) const;
+    const AreaLight* GetAreaLight() const { return nullptr; }
+    const material* GetMaterial() const { return nullptr; }
+
+public:
+    std::vector<shared_ptr<Primitive>> primitives;
+};
+
+
 // TransformedPrimitive Declarations
 class TransformedPrimitive : public Primitive {
   public:

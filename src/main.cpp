@@ -69,7 +69,7 @@ color ray_color(
 
 color ray_color_new(
     const ray& r, const color& background, const hittable& world,
-    const vector<shared_ptr<pbrt::Primitive>>& primitives,
+    const pbrt::PrimitiveLists& primitives,
     const shared_ptr<hittable>& lights, int depth
 ) {
     hit_record rec;
@@ -79,15 +79,8 @@ color ray_color_new(
         return color(0, 0, 0);
 
     //test hit the primitives
-    bool hit_prim = false;
     pbrt::SurfaceInteraction surface_rec;
-    for (const auto& prim : primitives) {
-        if (prim->IntersectP(r))
-        {
-            hit_prim = true;
-            prim->Intersect(r, &surface_rec);
-        }
-    }
+    bool hit_prim = primitives.Intersect(r, &surface_rec);
 
     // If the ray hits nothing, return the background color.
     //if (!world.hit(r, 0.001, infinity, rec))
@@ -136,77 +129,6 @@ color ray_color_new(
 
 }
 
-color ray_color_new(
-    const ray& r, const color& background, const hittable& world,
-    const vector<std::shared_ptr<pbrt::Triangle>>& primitives,
-    const shared_ptr<hittable>& lights, int depth
-) {
-    hit_record rec;
-
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return color(0, 0, 0);
-
-    //test hit the primitives
-    bool hit_prim = false;
-    pbrt::SurfaceInteraction surface_rec;
-    pbrt::SurfaceInteraction surface_rec1;
-    Float tHit;
-    for (const auto& prim : primitives) {
-        if (prim->Intersect(r,&tHit,&surface_rec1))
-        {
-            hit_prim = true;
-            prim->Intersect(r, &tHit, &surface_rec);
-            r.tMax = tHit;
-        }
-    }
-
-    // If the ray hits nothing, return the background color.
-    //if (!world.hit(r, 0.001, infinity, rec))
-        //return background;
-
-    //test hit the world
-    if (!world.hit(r, 0.001, r.tMax, rec))
-    {   // If the ray hits nothing, return the background color.
-        if (!hit_prim)
-            return background;
-        //hit the prims
-        //scatter_record prim_srec;
-        //make rec from surface_rec
-        //hit_record p_rec;
-        /*
-        rec.p = surface_rec.p;
-        rec.normal = surface_rec.n;
-        rec.t = r.tMax;
-        rec.mat_ptr = surface_rec.mat_ptr;
-        rec.u = surface_rec.uv.x;
-        rec.v = surface_rec.uv.y;
-        rec.set_face_normal(r, rec.normal);*/
-        return color(.3, .3, .3);
-
-    }
-    //hit the world or prims
-    scatter_record srec;
-    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
-    if (!rec.mat_ptr->scatter(r, rec, srec))
-        return emitted;
-
-    if (srec.is_specular) {
-        return srec.attenuation
-            * ray_color_new(srec.specular_ray, background, world, primitives, lights, depth - 1);
-    }
-
-    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
-    mixture_pdf p(light_ptr, srec.pdf_ptr);
-
-    ray scattered = ray(rec.p, p.generate(), r.Time());
-    auto pdf_val = p.value(scattered.direction());
-
-    return emitted
-        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color_new(scattered, background, world, primitives, lights, depth - 1) / pdf_val;
-
-}
 
 hittable_list random_scene() {
     hittable_list world;
@@ -258,7 +180,7 @@ hittable_list random_scene() {
     return world;
 }
 
-hittable_list two_spheres(vector<shared_ptr<pbrt::Primitive>>& primitives) {
+hittable_list two_spheres(pbrt::PrimitiveLists& primitives) {
     hittable_list objects;
 
     auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
@@ -275,7 +197,7 @@ hittable_list two_spheres(vector<shared_ptr<pbrt::Primitive>>& primitives) {
     auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, -10, 10, 360);
     auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
     
-    primitives.push_back(sphere_geo);
+    primitives.add(sphere_geo);
     return objects;
 }
 
@@ -434,7 +356,7 @@ hittable_list cornell_smoke() {
     return objects;
 }
 
-hittable_list cornell_box_primitive(vector<shared_ptr<pbrt::Primitive>>& primitives) {
+hittable_list cornell_box_primitive(pbrt::PrimitiveLists& primitives) {
     hittable_list objects;
 
     auto red = make_shared<lambertian>(color(.65, .05, .05));
@@ -463,7 +385,7 @@ hittable_list cornell_box_primitive(vector<shared_ptr<pbrt::Primitive>>& primiti
     auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, nullptr, nullptr);
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, red));
-    primitives.push_back(Sph1_geo);
+    primitives.add(Sph1_geo);
     return objects;
 }
 
@@ -513,6 +435,56 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
     auto trimesh_shape = make_shared<pbrt::Shape_list>(trimesh, ident, ident);//(trimesh,nullptr,nullptr,false)
     auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
     primitives.push_back(trimesh_geo);
+    return objects;
+}
+
+hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
+    hittable_list objects;
+
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), aluminum);
+    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
+    //box1 = make_shared<rotate_y>(box1, 15);
+    //box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
+    //objects.add(box1);
+
+    //auto glass = make_shared<dielectric>(1.5);
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
+
+    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/Cat_head.obj";
+    auto ident = make_shared<pbrt::Transform>();
+    //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
+    //cat_head
+    auto obj2wor = make_shared<pbrt::Transform>(
+        pbrt::Translate(Vector3f(220, 0, 0)) *
+        pbrt::Rotate(-90, Point3f(400, 400, 0), Vector3f(0, 1, 0)) *
+        pbrt::Translate(Vector3f(360, 360, 360)) *
+        pbrt::Scale(2.5, 2.5, 2.5) *
+        pbrt::RotateX(-60));
+    //cone_tri
+    /*auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
+        pbrt::Rotate(25, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
+        pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));*/
+        //cout << "obj2wor: " << *obj2wor << endl;
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto trimesh = pbrt::CreateTriangleMesh(obj2wor, wor2obj, false, loadpath);
+    //auto trimesh_shape = make_shared<pbrt::Shape_list>(trimesh, ident, ident);//(trimesh,nullptr,nullptr,false)
+    //auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
+    //primitives.push_back(trimesh_geo);
+    primitives.add(trimesh, green, nullptr);
     return objects;
 }
 
@@ -603,7 +575,7 @@ int main() {
 
     bool Isspectrum = false;
 
-    vector<shared_ptr<pbrt::Primitive>> primitives;
+    pbrt::PrimitiveLists primitives;
 
     switch (11) {
     case 1:

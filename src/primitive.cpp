@@ -122,4 +122,31 @@ void GeometricPrimitive::ComputeScatteringFunctions(
     CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
 }*/
 
+Bounds3f PrimitiveLists::WorldBound() const {
+    Bounds3f worBound;
+    for (auto& primitive : primitives) {
+        worBound = Union(worBound, primitive->WorldBound());
+    }
+    return worBound;
+}
+bool PrimitiveLists::Intersect(const Ray& r, SurfaceInteraction* isect) const {
+    bool hit_prims = false;
+    for (auto& primitive : primitives) {
+        if (primitive->IntersectP(r))
+        {
+            hit_prims = true;
+            primitive->Intersect(r, isect);
+        }
+    }
+    return hit_prims;
+}
+bool PrimitiveLists::IntersectP(const Ray& r) const {
+    for (auto& primitive : primitives) {
+        if (primitive->IntersectP(r))
+            return true;
+    }
+    return false;
+}
+
+
 }  // namespace pbrt
