@@ -28,7 +28,7 @@ using namespace std;
 #include "transform.h"
 #include "primitive.h"
 #include "triangle.h"
-#include "shape_list.h"
+//#include "shape_list.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -389,54 +389,6 @@ hittable_list cornell_box_primitive(pbrt::PrimitiveLists& primitives) {
     return objects;
 }
 
-hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitives) {
-    hittable_list objects;
-
-    auto red = make_shared<lambertian>(color(.65, .05, .05));
-    auto white = make_shared<lambertian>(color(.73, .73, .73));
-    auto green = make_shared<lambertian>(color(.12, .45, .15));
-    auto light = make_shared<diffuse_light>(color(15, 15, 15));
-
-    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
-    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
-    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
-    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
-    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
-    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
-
-    //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
-    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), aluminum);
-    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
-    //box1 = make_shared<rotate_y>(box1, 15);
-    //box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
-    //objects.add(box1);
-
-    //auto glass = make_shared<dielectric>(1.5);
-    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
-    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
-
-    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/Cat_head.obj";
-    auto ident = make_shared<pbrt::Transform>();
-    //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
-    //cat_head
-    auto obj2wor = make_shared<pbrt::Transform>(
-        pbrt::Translate(Vector3f(220,0,0))*
-        pbrt::Rotate(-90,Point3f(400,400,0),Vector3f(0,1,0))*
-        pbrt::Translate(Vector3f(360,360,360))*
-        pbrt::Scale(2.5,2.5,2.5)*
-        pbrt::RotateX(-60));
-    //cone
-    /*auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
-        pbrt::Rotate(25, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
-        pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));*/
-    //cout << "obj2wor: " << *obj2wor << endl;
-    auto wor2obj = pbrt::Inverse(obj2wor);
-    auto trimesh = pbrt::CreateTriangleMesh(obj2wor, wor2obj, false, loadpath);
-    auto trimesh_shape = make_shared<pbrt::Shape_list>(trimesh, ident, ident);//(trimesh,nullptr,nullptr,false)
-    auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
-    primitives.push_back(trimesh_geo);
-    return objects;
-}
 
 hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
     hittable_list objects;
