@@ -493,13 +493,20 @@ hittable_list cornell_box_trimesh(vector<shared_ptr<pbrt::Primitive>>& primitive
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
 
-    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/tri.obj";
+    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/Cat_head.obj";
     auto ident = make_shared<pbrt::Transform>();
     //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
-    //auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(220,0,300))*pbrt::RotateY(180));
-    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
+    //cat_head
+    auto obj2wor = make_shared<pbrt::Transform>(
+        pbrt::Translate(Vector3f(220,0,0))*
+        pbrt::Rotate(-90,Point3f(400,400,0),Vector3f(0,1,0))*
+        pbrt::Translate(Vector3f(360,360,360))*
+        pbrt::Scale(2.5,2.5,2.5)*
+        pbrt::RotateX(-60));
+    //cone
+    /*auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
         pbrt::Rotate(25, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
-        pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));
+        pbrt::Rotate(180,Point3f(100,100,0),Vector3f(0,1,0)));*/
     //cout << "obj2wor: " << *obj2wor << endl;
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto trimesh = pbrt::CreateTriangleMesh(obj2wor, wor2obj, false, loadpath);
