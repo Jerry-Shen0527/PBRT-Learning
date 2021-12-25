@@ -416,7 +416,7 @@ hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, green));
 
-    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/Cat_head.obj";
+    char* loadpath = "D:/Material/CodeField/Cpp_Code/PBRT/PBRT-Learning/data/David328.obj";
     auto ident = make_shared<pbrt::Transform>();
     //pbrt::Rotate(30, Point3f(0, 0, 200), Vector3f(1, 0, 0))*
     //cat_head
@@ -424,7 +424,7 @@ hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
         pbrt::Translate(Vector3f(220, 0, 0)) *
         pbrt::Rotate(-90, Point3f(400, 400, 0), Vector3f(0, 1, 0)) *
         pbrt::Translate(Vector3f(360, 360, 360)) *
-        pbrt::Scale(2.5, 2.5, 2.5) *
+        pbrt::Scale(20, 20, 20) *
         pbrt::RotateX(-60));
     //cone_tri
     /*auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(180,50,330))*
