@@ -178,4 +178,9 @@ public:
     shared_ptr<texture> albedo;
 };
 
+
+namespace pbrt {
+    enum class TransportMode { Radiance, Importance };
+}
+
 #endif

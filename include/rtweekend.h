@@ -30,6 +30,8 @@ const Float Infinity = std::numeric_limits<Float>::infinity();
 const Float pi = 3.1415926535897932385;
 const Float MachineEpsilon = (std::numeric_limits<Float>::epsilon() * 0.5);
 
+// Global Macros
+#define ALLOCA(TYPE, COUNT) (TYPE *) alloca((COUNT) * sizeof(TYPE))
 
 //CHECK
 //#define PBRT_DEBUG
