@@ -54,9 +54,123 @@ A group of GCLers re-implementing PBRT for code practice.
 
 ### Chapter 05
 
-1. **radiometry**
+#### **Radiometry**
 
+<img src=trivial/radiometric.png width="70%" height="70%">
+
+1. Basic quantities
+
+   - **Energy:** A photon at wavelength $\lambda$ carries energy
+     $$
+     Q=\frac{hc}{\lambda}
+     $$
+
+   - **Flux:** the limit of differential energy per differential time
+     $$
+     \Phi=\lim_{\Delta t\rightarrow0} \frac{\Delta Q}{\Delta t}=\frac{dQ}{dt}
+     $$
+
+   - **Irradiance and Radiant Exitance:** flux per area
+
+     This quantity is either irradiance(E), **the area density of flux arriving at a surface**, 
+
+     or radiant exitance(M), **the area density of flux leaving a surface.**
+
+     Define: the limit of differential power per differential area at a point p:
+     $$
+     E(p)=\lim_{\Delta A \rightarrow 0} \frac{\Delta \Phi(p)}{\Delta A}=\frac{d\Phi(p)}{dA}
+     $$
+
+     $$
+     \int_{A}E(p) d A
+     $$
+
+   - **Intensity:**  the limit of a differential cone of directions:
+     $$
+     I=\lim_{\Delta \omega \rightarrow 0} \frac{\Delta \Phi}{\Delta \omega}=\frac{d\Phi}{d\omega}
+        \\
+        \Phi=\int_{\Omega} I(\omega)d\omega
+     $$
+     
    
+    Intensity describes the directional distribution of light, but it is only meaningful for point light sources.
+   
+   - **Radiance:** differential power per differential area **per differential solid angle.**
+   
+   - $$
+     L(p,\omega)=\lim_{\Delta \omega \rightarrow 0} \frac{\Delta E_\omega(p)}{\Delta \omega}=\frac{dE_\omega(p)}{d\omega}
+     $$
+   
+     $E_\omega$: irradiance at the surface that is **perpendicular to the direction** $\omega$
+   
+     Radiance is the flux density **per unit area, per unit solid angle.**
+     $$
+     L=\frac{d\Phi}{d\omega dA^{\bot}}
+     $$
+     <img src=trivial/Radiance.png width="60%" height="50%">
+
+#### Render
+
+$$
+E(p,\pmb n)=\int_{\Omega} L_{i}(p,\omega)|cos\theta|d\omega
+$$
+
+- **Integrals over spherical coordinates**
+  $$
+  d\omega=sin\theta \ d\theta \ d\phi\\
+  \\
+  \begin{align}
+  E(p,\pmb n)&=\int_{H^2(\pmb n)} L_{i}(p,\omega)|cos\theta|d\omega\\
+  &=\int_0^{2 \pi} \int_0^{\pi/2} L_i(p,\theta,\phi) \ cos\theta\ sin\theta \ d\theta \ d\phi
+  \end{align}
+  $$
+  
+
+- **Integrals over area**
+  $$
+  d\omega=\frac{dA\ cos\theta}{r^2}\\
+  \\
+  F(p,\pmb n)=\int_A L\ cos\theta_i\frac{cos\theta_o \ dA }{r^2}
+  $$
+  <img src=trivial/integral_area.png width="60%" height="50%">
+
+#### Surface reflection
+
+- **BRDF**
+
+  <img src=trivial/brdf.png width="60%" height="50%">
+
+  - the differential irradiance at p is
+
+  $$
+  dE(p,\omega_i)=L_i(p,\omega_i)\ cos\theta_i \ d\omega_i
+  $$
+
+  - Because of the linearity assumption from geometric optics, the reflecteddifferential radiance is proportional to the irradiance
+
+  $$
+  dL_o(p,\omega_o) \propto dE(p,\omega_i)
+  $$
+
+  - The constant of proportionality defines the surface’s BRDF for the particular pair of directions $\omega_i$ and $\omega_o$:
+    $$
+    f_r(p,w_o,\omega_i)=\frac{dL_o(p,\omega_o)}{dE(p,\omega_i)}=\frac{dL_o(p,\omega_o)}{L_i(p,\omega_i)\ cos\theta_i \ d\omega_i}
+    $$
+
+- Equation
+  $$
+  dL_o(p,\omega_o)=f_r(p,w_o,\omega_i)L_i(p,\omega_i)\ |cos\theta_i| \ d\omega_i \\
+  \\
+  L_o(p,\omega_o)=\int_{\delta^2}f_r(p,w_o,\omega_i)L_i(p,\omega_i)\ |cos\theta_i| \ d\omega_i
+  $$
+
+- BSSDF
+
+  <img src=trivial/bssdf_pic.png width="60%" height="50%">
+
+<img src=trivial/bssrdf.png width="80%" height="50%">
+
+
 
 ### Chapter 02 Geometry and transformations
 
