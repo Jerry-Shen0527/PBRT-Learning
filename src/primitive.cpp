@@ -70,7 +70,7 @@ bool TransformedPrimitive::IntersectP(const Ray &r) const {
 
 // GeometricPrimitive Method Definitions
 GeometricPrimitive::GeometricPrimitive(const std::shared_ptr<Shape> &shape,
-                                       const std::shared_ptr<material> &material,
+                                       const std::shared_ptr<Material> &material,
                                        const std::shared_ptr<AreaLight> &areaLight)
     : shape(shape),
     material_(material),
@@ -108,19 +108,19 @@ const AreaLight *GeometricPrimitive::GetAreaLight() const {
     return areaLight.get();
 }
 
-const material *GeometricPrimitive::GetMaterial() const {
+const Material *GeometricPrimitive::GetMaterial() const {
     return material_.get();
 }
-/*
+
 void GeometricPrimitive::ComputeScatteringFunctions(
     SurfaceInteraction *isect, MemoryArena &arena, TransportMode mode,
     bool allowMultipleLobes) const {
-    ProfilePhase p(Prof::ComputeScatteringFuncs);
-    if (material)
-        material->ComputeScatteringFunctions(isect, arena, mode,
+    //ProfilePhase p(Prof::ComputeScatteringFuncs);
+    if (material_)
+        material_->ComputeScatteringFunctions(isect, arena, mode,
                                              allowMultipleLobes);
     CHECK_GE(Dot(isect->n, isect->shading.n), 0.);
-}*/
+}
 
 Bounds3f PrimitiveLists::WorldBound() const {
     Bounds3f worBound;

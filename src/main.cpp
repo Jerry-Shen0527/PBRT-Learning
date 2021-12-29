@@ -49,14 +49,17 @@ color ray_color(
     if (!rec.mat_ptr->scatter(r, rec, srec))
         return emitted;
 
+    //specular situation
     if (srec.is_specular) {
         return srec.attenuation
             * ray_color(srec.specular_ray, background, world, lights, depth - 1);
     }
 
+    //Lambertian situation
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
     mixture_pdf p(light_ptr, srec.pdf_ptr);
 
+    //sample pdf
     ray scattered = ray(rec.p, p.generate(), r.Time());
     auto pdf_val = p.value(scattered.direction());
 
@@ -102,7 +105,7 @@ color ray_color_new(
         rec.mat_ptr = surface_rec.mat_ptr;
         rec.u = surface_rec.uv.x;
         rec.v = surface_rec.uv.y;
-        rec.set_face_normal(r, rec.normal);/**/
+        rec.set_face_normal(r, rec.normal);/*                                                                            v m   */
         //return color(.3, .3, .3);
                 
     }
@@ -195,7 +198,8 @@ hittable_list two_spheres(pbrt::PrimitiveLists& primitives) {
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, -10, 10, 360);
-    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
+    //auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, nullptr, nullptr);
     
     primitives.add(sphere_geo);
     return objects;
@@ -208,7 +212,7 @@ shared_ptr< pbrt::GeometricPrimitive> test()
     auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(0, 10, 0)));
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto sphere_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 10, -10, 10, 360);
-    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, red, nullptr);
+    auto sphere_geo = make_shared< pbrt::GeometricPrimitive>(sphere_ptr, nullptr, nullptr);
     return sphere_geo;
 }
 
@@ -436,7 +440,8 @@ hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
     //auto trimesh_shape = make_shared<pbrt::Shape_list>(trimesh, ident, ident);//(trimesh,nullptr,nullptr,false)
     //auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
     //primitives.push_back(trimesh_geo);
-    primitives.add(trimesh, green, nullptr);
+    //primitives.add(trimesh, green, nullptr);
+    primitives.add(trimesh, nullptr, nullptr);
     return objects;
 }
 

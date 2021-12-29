@@ -33,6 +33,11 @@ const Float MachineEpsilon = (std::numeric_limits<Float>::epsilon() * 0.5);
 // Global Macros
 #define ALLOCA(TYPE, COUNT) (TYPE *) alloca((COUNT) * sizeof(TYPE))
 
+
+#ifndef PBRT_L1_CACHE_LINE_SIZE
+#define PBRT_L1_CACHE_LINE_SIZE 64
+#endif
+
 //CHECK
 //#define PBRT_DEBUG
 #ifndef PBRT_DEBUG

@@ -4,7 +4,7 @@
 // core/interaction.cpp*
 #include "interaction.h"
 #include "transform.h"
-//#include "primitive.h"
+#include "primitive.h"
 #include "shape.h"
 //#include "light.h"
 
@@ -58,7 +58,7 @@ void SurfaceInteraction::SetShadingGeometry(const Vector3f &dpdus,
     shading.dndv = dndvs;
 }
 
-/*
+
 void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
                                                     MemoryArena &arena,
                                                     bool allowMultipleLobes,
@@ -66,7 +66,7 @@ void SurfaceInteraction::ComputeScatteringFunctions(const RayDifferential &ray,
     ComputeDifferentials(ray);
     primitive->ComputeScatteringFunctions(this, arena, mode,
                                           allowMultipleLobes);
-}*/
+}
 
 void SurfaceInteraction::ComputeDifferentials(
     const RayDifferential &ray) const {

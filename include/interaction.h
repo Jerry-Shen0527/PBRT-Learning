@@ -26,6 +26,8 @@ namespace pbrt {
     //struct MediumInterface;
     class Shape;
     class Primitive;
+    class MemoryArena;
+    class BSDF;
 // Interaction Declarations
 struct Interaction {
     // Interaction Public Methods
@@ -108,11 +110,11 @@ class SurfaceInteraction : public Interaction {
     void SetShadingGeometry(const Vector3f &dpdu, const Vector3f &dpdv,
                             const Normal3f &dndu, const Normal3f &dndv,
                             bool orientationIsAuthoritative);
-    /*
+    
     void ComputeScatteringFunctions(
         const RayDifferential &ray, MemoryArena &arena,
         bool allowMultipleLobes = false,
-        TransportMode mode = TransportMode::Radiance);*/
+        TransportMode mode = TransportMode::Radiance);
     void ComputeDifferentials(const RayDifferential &r) const;
     //Spectrum Le(const Vector3f &w) const;
 
@@ -127,9 +129,9 @@ class SurfaceInteraction : public Interaction {
         Normal3f dndu, dndv;
     } shading;
     const Primitive *primitive = nullptr;
-    //BSDF *bsdf = nullptr;
+    BSDF *bsdf = nullptr;
     //BSSRDF *bssrdf = nullptr;
-    shared_ptr<material> mat_ptr;
+    shared_ptr<Material> mat_ptr;
     mutable Vector3f dpdx, dpdy;
     mutable Float dudx = 0, dvdx = 0, dudy = 0, dvdy = 0;
 

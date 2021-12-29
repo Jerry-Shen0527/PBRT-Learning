@@ -125,12 +125,11 @@ $$
   \end{align}
   $$
   
-
 - **Integrals over area**
   $$
   d\omega=\frac{dA\ cos\theta}{r^2}\\
   \\
-  F(p,\pmb n)=\int_A L\ cos\theta_i\frac{cos\theta_o \ dA }{r^2}
+  E(p,\pmb n)=\int_A L\ cos\theta_i\frac{cos\theta_o \ dA }{r^2}
   $$
   <img src=trivial/integral_area.png width="60%" height="50%">
 
@@ -1142,3 +1141,10 @@ ray intersection acceleration based on **spatial partition.**
  A kd-tree simply restricts the splitting plane to be perpendicular to one of the coordinate axes; 
 
 <img src=trivial/8.png width="60%" height="60%">
+
+
+
+### Reflcetion Model
+
+https://www.zhihu.com/search?type=content&q=%E5%BE%AE%E8%A1%A8%E9%9D%A2%E6%A8%A1%E5%9E%8B
+

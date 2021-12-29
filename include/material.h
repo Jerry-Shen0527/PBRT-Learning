@@ -1,3 +1,9 @@
+
+#if defined(_MSC_VER)
+#define NOMINMAX
+#pragma once
+#endif
+
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
@@ -8,6 +14,7 @@
 #include "texture.h"
 #include "onb.h"
 #include "pdf.h"
+#include "memory.h"
 
 struct hit_record;
 
@@ -180,7 +187,21 @@ public:
 
 
 namespace pbrt {
+    // TransportMode Declarations
     enum class TransportMode { Radiance, Importance };
+
+    // Material Declarations
+    class Material {
+    public:
+        // Material Interface
+        virtual void ComputeScatteringFunctions(SurfaceInteraction* si,
+            MemoryArena& arena,
+            TransportMode mode,
+            bool allowMultipleLobes) const = 0;
+        virtual ~Material();
+        static void Bump(const std::shared_ptr<Texture<Float>>& d,
+            SurfaceInteraction* si);
+    };
 }
 
 #endif
