@@ -33,6 +33,7 @@ using namespace std;
 #include "constant.h"
 
 #include "reflection.h"
+#include "glass.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -170,7 +171,7 @@ pbrt::Spectrum ray_color_newmaterial(
         //hit the prims
             //make rec from surface_rec
         pbrt::MemoryArena arena;
-        surface_rec.ComputeScatteringFunctions(r, arena);
+        surface_rec.ComputeScatteringFunctions(r, arena, true);
         Vector3f wi;
         Point2f u(random_Float(), random_Float());
         Float pdf;
@@ -178,12 +179,9 @@ pbrt::Spectrum ray_color_newmaterial(
         //-r.d?
         auto f = surface_rec.bsdf->Sample_f(-r.d, &wi, u, &pdf);
         ray scatterray = ray(surface_rec.p, wi, r.Time());
-        auto consine = Dot(wi, surface_rec.n) / wi.Length() / surface_rec.n.Length();
-        if (consine < 0.f)
-            return background;
-        else
-            return f * ray_color_newmaterial(scatterray, background, world, primitives, lights, depth - 1)
-            * consine / pdf;
+        auto absconsine = AbsDot(wi, surface_rec.n) / wi.Length() / surface_rec.n.Length();
+        return f * ray_color_newmaterial(scatterray, background, world, primitives, lights, depth - 1)
+            * absconsine / pdf;
         /*rec.p = surface_rec.p;
         rec.normal = surface_rec.n;
         rec.t = r.tMax;
@@ -563,15 +561,25 @@ hittable_list cornell_box_newmaterial(pbrt::PrimitiveLists& primitives) {
     auto wor2obj = pbrt::Inverse(obj2wor);
     auto Sph1_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 90, -90, 90, 360);
 
-    //new material of matte
-    Float green_rgb[3] = { .32, .45, .55 };
+    //new MatteMaterial
+    /*Float green_rgb[3] = { .32, .45, .55 };
     auto Kd = make_shared<pbrt::ConstantTexture<pbrt::Spectrum>>(pbrt::Spectrum::FromRGB(green_rgb));
     auto sigma= make_shared<pbrt::ConstantTexture<Float>>(30.f);
     auto matte_green = make_shared<pbrt::MatteMaterial>(Kd, sigma, nullptr);
-    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, matte_green, nullptr);
+    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, matte_green, nullptr);*/
+
+    //new Glass Material
+    auto Kr = make_shared<pbrt::ConstantTexture<pbrt::Spectrum>>(pbrt::Spectrum(1));
+    auto Kt = make_shared<pbrt::ConstantTexture<pbrt::Spectrum>>(pbrt::Spectrum(1));
+    auto uroughness = make_shared<pbrt::ConstantTexture<Float>>(0);
+    auto vroughness = make_shared<pbrt::ConstantTexture<Float>>(0);
+    auto index = make_shared<pbrt::ConstantTexture<Float>>(1.5);
+    bool remapRoughness = true;
+    auto new_glass = make_shared<pbrt::GlassMaterial>(Kr, Kt, uroughness, vroughness, index, nullptr, remapRoughness);
+    auto glass_shpere = make_shared<pbrt::GeometricPrimitive>(Sph1_ptr, new_glass, nullptr);
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
     //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, red));
-    primitives.add(Sph1_geo);
+    primitives.add(glass_shpere);
     return objects;
 }
 
@@ -796,8 +804,10 @@ int main() {
         samples_per_pixel = 100;//200
         //background = color(0, 0, 0);
         background = pbrt::Spectrum(0.f);
-        lookfrom = Point3f(10, 500, 10);
-        lookat = Point3f(250, 90, 250);
+        /*lookfrom = Point3f(10, 500, 10);
+        lookat = Point3f(250, 90, 250);*/
+        lookfrom = Point3f(278, 278, -800);
+        lookat = Point3f(278, 278, 0);
         vfov = 40.0;
         Isspectrum = true;
         break;
