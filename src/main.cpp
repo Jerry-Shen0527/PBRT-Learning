@@ -29,6 +29,10 @@ using namespace std;
 #include "primitive.h"
 #include "triangle.h"
 //#include "shape_list.h"
+#include "matte.h"
+#include "constant.h"
+
+#include "reflection.h"
 
 color ray_color(
     const ray& r, const color& background, const hittable& world,
@@ -70,8 +74,75 @@ color ray_color(
 }
 
 
-color ray_color_new(
-    const ray& r, const color& background, const hittable& world,
+//color ray_color_new(
+//    const ray& r, const color& background, const hittable& world,
+//    const pbrt::PrimitiveLists& primitives,
+//    const shared_ptr<hittable>& lights, int depth
+//) {
+//    hit_record rec;
+//
+//    // If we've exceeded the ray bounce limit, no more light is gathered.
+//    if (depth <= 0)
+//        return color(0, 0, 0);
+//
+//    //test hit the primitives
+//    pbrt::SurfaceInteraction surface_rec;
+//    bool hit_prim = primitives.Intersect(r, &surface_rec);
+//
+//    // If the ray hits nothing, return the background color.
+//    //if (!world.hit(r, 0.001, infinity, rec))
+//        //return background;
+//
+//    //test hit the world
+//    if (!world.hit(r, 0.001, r.tMax, rec))
+//    {   // If the ray hits nothing, return the background color.
+//        if(!hit_prim)
+//            return background;
+//        //hit the prims
+//        //scatter_record prim_srec;
+//        //make rec from surface_rec
+//        //hit_record p_rec;
+//        
+//        rec.p = surface_rec.p;
+//        rec.normal = surface_rec.n;
+//        rec.t = r.tMax;
+//        rec.mat_ptr = surface_rec.mat_ptr;
+//        rec.u = surface_rec.uv.x;
+//        rec.v = surface_rec.uv.y;
+//        rec.set_face_normal(r, rec.normal);
+//        //return color(.3, .3, .3);
+//                
+//    }
+//    //hit the world or prims
+//    scatter_record srec;
+//    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+//    if (!rec.mat_ptr->scatter(r, rec, srec))
+//        return emitted;
+//
+//    if (srec.is_specular) {
+//        return srec.attenuation
+//            * ray_color_new(srec.specular_ray, background, world, primitives, lights, depth - 1);
+//    }
+//
+//    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+//    mixture_pdf p(light_ptr, srec.pdf_ptr);
+//
+//    ray scattered = ray(rec.p, p.generate(), r.Time());
+//    auto pdf_val = p.value(scattered.direction());
+//
+//    return emitted
+//        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+//        * ray_color_new(scattered, background, world, primitives, lights, depth - 1) / pdf_val;
+//
+//}
+
+inline pbrt::Spectrum color2spect(color c) {
+    Float rgb[3] = { c.x,c.y,c.z };
+    return pbrt::Spectrum::FromRGB(rgb);
+}
+
+pbrt::Spectrum ray_color_newmaterial(
+    const ray& r, const pbrt::Spectrum& background, const hittable& world,
     const pbrt::PrimitiveLists& primitives,
     const shared_ptr<hittable>& lights, int depth
 ) {
@@ -79,7 +150,8 @@ color ray_color_new(
 
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
-        return color(0, 0, 0);
+        //return color(0, 0, 0);
+        return pbrt::Spectrum(0.0);
 
     //test hit the primitives
     pbrt::SurfaceInteraction surface_rec;
@@ -92,46 +164,60 @@ color ray_color_new(
     //test hit the world
     if (!world.hit(r, 0.001, r.tMax, rec))
     {   // If the ray hits nothing, return the background color.
-        if(!hit_prim)
+        if (!hit_prim)
             return background;
+
         //hit the prims
-        //scatter_record prim_srec;
-        //make rec from surface_rec
-        //hit_record p_rec;
-        
-        rec.p = surface_rec.p;
+            //make rec from surface_rec
+        pbrt::MemoryArena arena;
+        surface_rec.ComputeScatteringFunctions(r, arena);
+        Vector3f wi;
+        Point2f u(random_Float(), random_Float());
+        Float pdf;
+        //sample ; could add sample_type
+        //-r.d?
+        auto f = surface_rec.bsdf->Sample_f(-r.d, &wi, u, &pdf);
+        ray scatterray = ray(surface_rec.p, wi, r.Time());
+        auto consine = Dot(wi, surface_rec.n) / wi.Length() / surface_rec.n.Length();
+        if (consine < 0.f)
+            return background;
+        else
+            return f * ray_color_newmaterial(scatterray, background, world, primitives, lights, depth - 1)
+            * consine / pdf;
+        /*rec.p = surface_rec.p;
         rec.normal = surface_rec.n;
         rec.t = r.tMax;
         rec.mat_ptr = surface_rec.mat_ptr;
         rec.u = surface_rec.uv.x;
         rec.v = surface_rec.uv.y;
-        rec.set_face_normal(r, rec.normal);/*                                                                            v m   */
+        rec.set_face_normal(r, rec.normal);*/
         //return color(.3, .3, .3);
-                
+
     }
-    //hit the world or prims
+    //hit the world 
     scatter_record srec;
     color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
     if (!rec.mat_ptr->scatter(r, rec, srec))
-        return emitted;
+        //return emitted;
+        return color2spect(emitted);
 
     if (srec.is_specular) {
-        return srec.attenuation
-            * ray_color_new(srec.specular_ray, background, world, primitives, lights, depth - 1);
+        return color2spect(srec.attenuation)
+            * ray_color_newmaterial(srec.specular_ray, background, world, primitives, lights, depth - 1);
     }
 
+    //importance sample
     auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
     mixture_pdf p(light_ptr, srec.pdf_ptr);
 
     ray scattered = ray(rec.p, p.generate(), r.Time());
     auto pdf_val = p.value(scattered.direction());
 
-    return emitted
-        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
-        * ray_color_new(scattered, background, world, primitives, lights, depth - 1) / pdf_val;
+    return color2spect(emitted)
+        + color2spect(srec.attenuation) * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+        * ray_color_newmaterial(scattered, background, world, primitives, lights, depth - 1) / pdf_val;
 
 }
-
 
 hittable_list random_scene() {
     hittable_list world;
@@ -441,7 +527,51 @@ hittable_list cornell_box_trimesh(pbrt::PrimitiveLists& primitives) {
     //auto trimesh_geo = make_shared<pbrt::GeometricPrimitive>(trimesh_shape, green, nullptr);
     //primitives.push_back(trimesh_geo);
     //primitives.add(trimesh, green, nullptr);
-    primitives.add(trimesh, nullptr, nullptr);
+    Float green_rgb[3] = { .32, .45, .55 };
+    auto Kd = make_shared<pbrt::ConstantTexture<pbrt::Spectrum>>(pbrt::Spectrum::FromRGB(green_rgb));
+    auto sigma = make_shared<pbrt::ConstantTexture<Float>>(0.f);
+    auto matte_green = make_shared<pbrt::MatteMaterial>(Kd, sigma, nullptr);
+    primitives.add(trimesh, matte_green, nullptr);
+    return objects;
+}
+
+
+hittable_list cornell_box_newmaterial(pbrt::PrimitiveLists& primitives) {
+    hittable_list objects;
+
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(213, 343, 227, 332, 554, light)));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    //shared_ptr<material> aluminum = make_shared<metal>(color(0.8, 0.85, 0.88), 0.0);
+    //shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), aluminum);
+    /*shared_ptr<hittable> box1 = make_shared<box>(Point3f(0, 0, 0), Point3f(165, 330, 165), white);
+    box1 = make_shared<rotate_y>(box1, 15);
+    box1 = make_shared<translate>(box1, Vector3f(265, 0, 295));
+    objects.add(box1);*/
+
+    auto glass = make_shared<dielectric>(1.5);
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(250, 90, 250)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto Sph1_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 90, -90, 90, 360);
+
+    //new material of matte
+    Float green_rgb[3] = { .32, .45, .55 };
+    auto Kd = make_shared<pbrt::ConstantTexture<pbrt::Spectrum>>(pbrt::Spectrum::FromRGB(green_rgb));
+    auto sigma= make_shared<pbrt::ConstantTexture<Float>>(30.f);
+    auto matte_green = make_shared<pbrt::MatteMaterial>(Kd, sigma, nullptr);
+    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, matte_green, nullptr);
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, glass));
+    //objects.add(make_shared<sphere>(Point3f(190, 90, 190), 90, red));
+    primitives.add(Sph1_geo);
     return objects;
 }
 
@@ -528,16 +658,17 @@ int main() {
     Point3f lookat;
     auto vfov = 40.0;
     auto aperture = 0.0;
-    color background(0, 0, 0);
+    //color background(0, 0, 0);
+    pbrt::Spectrum background(0.f);
 
     bool Isspectrum = false;
 
     pbrt::PrimitiveLists primitives;
 
-    switch (11) {
+    switch (12) {
     case 1:
         world = random_scene();
-        background = color(0.70, 0.80, 1.00);
+        background = color2spect(color(0.70, 0.80, 1.00));
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
         vfov = 20.0;
@@ -547,7 +678,8 @@ int main() {
     case 2:
         //world = two_spheres();
         world = two_spheres(primitives);
-        background = color(0.70, 0.80, 1.00);
+        //background = color(0.70, 0.80, 1.00);
+        background = color2spect(color(0.70, 0.80, 1.00));
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
         vfov = 20.0;
@@ -555,7 +687,8 @@ int main() {
 
     case 3:
         world = two_perlin_spheres();
-        background = color(0.70, 0.80, 1.00);
+        //background = color(0.70, 0.80, 1.00);
+        background = color2spect(color(0.70, 0.80, 1.00));
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
         vfov = 20.0;
@@ -563,7 +696,8 @@ int main() {
 
     case 4:
         world = earth();
-        background = color(0.70, 0.80, 1.00);
+        //background = color(0.70, 0.80, 1.00);
+        background = color2spect(color(0.70, 0.80, 1.00));
         lookfrom = Point3f(13, 2, 3);
         lookat = Point3f(0, 0, 0);
         vfov = 20.0;
@@ -572,7 +706,8 @@ int main() {
     case 5:
         world = simple_light();
         samples_per_pixel = 400;
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(26, 3, 6);
         lookat = Point3f(0, 2, 0);
         vfov = 20.0;
@@ -584,7 +719,8 @@ int main() {
         aspect_ratio = 1.0;
         image_width = 600;
         samples_per_pixel = 100;//200
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(278, 278, -800);
         lookat = Point3f(278, 278, 0);
         vfov = 40.0;
@@ -606,7 +742,8 @@ int main() {
         image_width = 800;
         //samples_per_pixel = 10000;
         samples_per_pixel = 800;
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(478, 278, -600);
         lookat = Point3f(278, 278, 0);
         vfov = 40.0;
@@ -618,7 +755,8 @@ int main() {
         aspect_ratio = 1.0;
         image_width = 600;
         samples_per_pixel = 100;//200
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(278, 278, -800);
         lookat = Point3f(278, 278, 0);
         vfov = 40.0;
@@ -630,7 +768,8 @@ int main() {
         aspect_ratio = 1.0;
         image_width = 600;
         samples_per_pixel = 100;//200
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(278, 278, -800);
         lookat = Point3f(278, 278, 0);
         vfov = 40.0;
@@ -642,13 +781,26 @@ int main() {
         aspect_ratio = 1.0;
         image_width = 600;
         samples_per_pixel = 100;//200
-        background = color(0, 0, 0);
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
         lookfrom = Point3f(278, 278, -800);
         lookat = Point3f(278, 278, 0);
         vfov = 40.0;
         Isspectrum = true;
         break;
         
+    case 12:
+        world = cornell_box_newmaterial(primitives);
+        aspect_ratio = 1.0;
+        image_width = 600;
+        samples_per_pixel = 100;//200
+        //background = color(0, 0, 0);
+        background = pbrt::Spectrum(0.f);
+        lookfrom = Point3f(10, 500, 10);
+        lookat = Point3f(250, 90, 250);
+        vfov = 40.0;
+        Isspectrum = true;
+        break;
     }
 
 
@@ -705,14 +857,16 @@ int main() {
             //for (auto& worker : workers)
              //   worker.join();
 
-            color pixel_color(0, 0, 0);
+            //color pixel_color(0, 0, 0);
+            pbrt::Spectrum pixel_color(0.f);
 #pragma omp parallel for
             for (int s = 0; s < samples_per_pixel; ++s) {
                    auto u = (i + random_Float()) / (image_width - 1);
                 auto v = (j + random_Float()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
                 //pixel_color += ray_color(r, background, world, lights, max_depth);
-                pixel_color += ray_color_new(r, background, world, primitives, lights, max_depth);
+                //pixel_color += ray_color_newmaterial(r, background, world, primitives, lights, max_depth);
+                pixel_color += ray_color_newmaterial(r, background, world, primitives, lights, max_depth);
             }
            
             if (Isspectrum)
@@ -724,7 +878,12 @@ int main() {
                 write_color(std::cout, rgb_color, samples_per_pixel);
             }
             else
-                write_color(std::cout, pixel_color, samples_per_pixel);
+            {
+                Float pixel_arr[3];
+                pixel_color.ToRGB(pixel_arr);
+                color pixel_rgb(pixel_arr[0], pixel_arr[1], pixel_arr[2]);
+                write_color(std::cout, pixel_rgb, samples_per_pixel);
+            }
 
         }
     }
@@ -732,6 +891,24 @@ int main() {
     double run_time = (double)(end - start) / CLOCKS_PER_SEC;
     std::cerr << "\nrun_time: "<<run_time << " s.\nDone.\n";/**/
     /*
+    auto obj2wor = make_shared<pbrt::Transform>(pbrt::Translate(Vector3f(250, 90, 250)));
+    auto wor2obj = pbrt::Inverse(obj2wor);
+    auto Sph1_ptr = make_shared<pbrt::Sphere>(obj2wor, wor2obj, false, 90, -90, 90, 360);
+    auto Sph1_geo = make_shared< pbrt::GeometricPrimitive>(Sph1_ptr, nullptr, nullptr);
+    Ray r1(Point3f(250.f, 90.f, 400.f), Vector3f(0, 0, -10));
+    pbrt::SurfaceInteraction suf_rec;
+    Sph1_geo->Intersect(r1, &suf_rec);
+    std::cout << suf_rec.p << "\n";
+    std::cout<<"normal: \n" << suf_rec.n << "\n";
+    
+    ray r;
+    pbrt::SurfaceInteraction surface_rec;
+    bool hit_prim = primitives.Intersect(r, &surface_rec);
+    pbrt::MemoryArena arena;
+    surface_rec.ComputeScatteringFunctions(r, arena);
+    pbrt::BSDF bsd(surface_rec);
+
+    
     Point3f p(1, 0, 0);
     cout << "p: "<< p << endl;
     if (pbrt::RotateZ(90) == pbrt::Rotate(90, Vector3f(0, 0, 2.6)))
