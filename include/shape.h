@@ -23,6 +23,7 @@ namespace pbrt {
 class Shape {
   public:
     // Shape Interface
+      //default
     Shape(shared_ptr<Transform> ObjectToWorld, shared_ptr<Transform> WorldToObject,
           bool reverseOrientation);
     virtual ~Shape();
